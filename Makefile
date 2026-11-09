@@ -5,10 +5,13 @@ all: build
 build:
 	./Scripts/build.sh
 
+package:
+	./Scripts/package-macos.sh
+
 install: build
-	@echo "==> Installing to /Applications/Local LLM Manager.app..."
-	rm -rf "/Applications/Local LLM Manager.app"
-	cp -R "build/Local LLM Manager.app" "/Applications/"
+	@echo "==> Installing to /Applications/Lulu.app..."
+	rm -rf "/Applications/Lulu.app"
+	cp -R "build/Lulu.app" "/Applications/"
 	@echo "==> Installed successfully."
 
 clean:

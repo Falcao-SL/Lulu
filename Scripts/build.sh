@@ -1,44 +1,57 @@
 #!/bin/bash
-set -e
+set -euo pipefail
+cd "$(dirname "$0")/.."
 
-APP_NAME="Local LLM Manager"
+APP_NAME="Lulu"
 BUILD_DIR="build"
 APP_BUNDLE="${BUILD_DIR}/${APP_NAME}.app"
+VERSION="${VERSION:-2.0.0}"
+BUILD="${BUILD:-0}"
 
 echo "==> Building ${APP_NAME}..."
 mkdir -p "${BUILD_DIR}"
 swiftc -parse-as-library -O -target arm64-apple-macosx14.0 \
-  -framework SwiftUI -framework AppKit \
-  Sources/LocalLLMManager/main.swift \
-  -o "${BUILD_DIR}/LocalLLMManager"
+  -framework SwiftUI -framework AppKit -framework Security \
+  Sources/LocalLLMManager/*.swift \
+  -o "${BUILD_DIR}/Lulu"
+
+echo "==> Rendering icon..."
+swiftc -parse-as-library -target arm64-apple-macosx14.0 -framework AppKit \
+  Sources/LocalLLMManager/CatGeometry.swift \
+  Scripts/render-icon.swift \
+  -o "${BUILD_DIR}/render-icon"
+"${BUILD_DIR}/render-icon" "${BUILD_DIR}/AppIcon.iconset"
+iconutil -c icns "${BUILD_DIR}/AppIcon.iconset" -o "${BUILD_DIR}/AppIcon.icns"
 
 echo "==> Packaging ${APP_BUNDLE}..."
 rm -rf "${APP_BUNDLE}"
 mkdir -p "${APP_BUNDLE}/Contents/MacOS"
 mkdir -p "${APP_BUNDLE}/Contents/Resources"
+cp "${BUILD_DIR}/Lulu" "${APP_BUNDLE}/Contents/MacOS/Lulu"
+cp "${BUILD_DIR}/AppIcon.icns" "${APP_BUNDLE}/Contents/Resources/AppIcon.icns"
+chmod +x "${APP_BUNDLE}/Contents/MacOS/Lulu"
 
-cp "${BUILD_DIR}/LocalLLMManager" "${APP_BUNDLE}/Contents/MacOS/LocalLLMManager"
-chmod +x "${APP_BUNDLE}/Contents/MacOS/LocalLLMManager"
-
-cat << 'PLIST' > "${APP_BUNDLE}/Contents/Info.plist"
+cat << PLIST > "${APP_BUNDLE}/Contents/Info.plist"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>LocalLLMManager</string>
+    <string>Lulu</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
-    <string>com.local.llmmanager</string>
+    <string>com.falcaosl.lulu</string>
     <key>CFBundleName</key>
-    <string>Local LLM Manager</string>
+    <string>Lulu</string>
     <key>CFBundleDisplayName</key>
-    <string>Local LLM Manager</string>
+    <string>Lulu</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>${VERSION}</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>${BUILD}</string>
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
     <key>NSHighResolutionCapable</key>
