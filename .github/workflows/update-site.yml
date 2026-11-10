@@ -1,12 +1,13 @@
-# Depois de cada Release macOS, publica o download atual em falcaosl.com/lulu/.
-# O GITHUB_TOKEN de uma release não dispara `on: release`, então o gatilho é
-# o fim do workflow de release. workflow_dispatch atualiza o site sem um build novo.
-
+# Release events produced by GITHUB_TOKEN do not trigger release workflows.
+# Publish the complete site after a successful release or a change to site/.
 name: Update product site
 
 on:
+  push:
+    branches: [main]
+    paths: ['site/**', 'Scripts/sync-site-release.py', '.github/workflows/update-site.yml']
   workflow_run:
-    workflows: ["Release macOS"]
+    workflows: ['Release macOS']
     types: [completed]
   workflow_dispatch:
 
@@ -19,28 +20,28 @@ concurrency:
 
 jobs:
   update:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
-    name: Publish current download
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    name: Deploy Lulu site
     runs-on: [self-hosted, Linux, homelab]
     env:
       HOST: ${{ secrets.HOMELAB_DEPLOY_HOST || '127.0.0.1' }}
       DEPLOY_USER: deploy
     steps:
       - uses: actions/checkout@v5
-
-      - name: Write release.json and rsync it to the hub
+        with:
+          ref: main
+      - name: Publish site and current downloads
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SSH_KEY: ${{ secrets.HOMELAB_DEPLOY_SSH_KEY }}
         run: |
           set -euo pipefail
-          test -n "${SSH_KEY:-}" || { echo "Falta secret HOMELAB_DEPLOY_SSH_KEY na org"; exit 1; }
-          python3 Scripts/sync-site-release.py --output "$RUNNER_TEMP/release.json"
-          python3 -m json.tool "$RUNNER_TEMP/release.json" >/dev/null
-          install -m 600 /dev/null key
-          printf '%s\n' "$SSH_KEY" > key
-          ssh_opts=(-i key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null)
-          rsync -az -e "ssh ${ssh_opts[*]}" \
-            "$RUNNER_TEMP/release.json" \
-            "${DEPLOY_USER}@${HOST}:/data/sites/hub/public/lulu/release.json"
-          echo "lulu/release.json publicado"
+          test -n "${SSH_KEY:-}" || { echo "Missing HOMELAB_DEPLOY_SSH_KEY" >&2; exit 1; }
+          python3 Scripts/sync-site-release.py --output site/release.json
+          python3 -m json.tool site/release.json >/dev/null
+          install -m 600 /dev/null "$RUNNER_TEMP/lulu-site-key"
+          trap 'rm -f "$RUNNER_TEMP/lulu-site-key"' EXIT
+          printf '%s\n' "$SSH_KEY" > "$RUNNER_TEMP/lulu-site-key"
+          ssh_opts=(-i "$RUNNER_TEMP/lulu-site-key" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null)
+          rsync -az --delete -e "ssh ${ssh_opts[*]}" site/ \
+            "${DEPLOY_USER}@${HOST}:/data/sites/lulu/public/"

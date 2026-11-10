@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://lulu.falcaosl.com/sitemap.xml

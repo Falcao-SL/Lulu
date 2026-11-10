@@ -1,0 +1,18 @@
+# Lulu
+
+> Lulu is a macOS app from Falcao SL. It manages local inference engines and models, starts a server with an OpenAI-compatible API on that Mac, and shows memory and speed when the engine reports them.
+
+## Pages
+
+- [English](https://lulu.falcaosl.com/): product page and downloads
+- [Português](https://lulu.falcaosl.com/index.pt.html): the same page in Brazilian Portuguese
+- [Releases](https://github.com/Falcao-SL/Lulu/releases): macOS installers
+
+## Facts
+
+- Publisher: Falcao SL (https://falcaosl.com/#org)
+- Platforms: macOS 14 or later. Apple Silicon runs MLX and GGUF. Intel Macs use GGUF with llama.cpp.
+- The local server listens on this Mac only. The default endpoint is http://127.0.0.1:8000/v1.
+- Inference stays on the Mac. Searching and downloading models, and installing engines, use the network.
+- Packages are ad hoc signed and are not notarized by Apple. On first launch, right-click Lulu and choose Open.
+- Current downloads are listed in https://lulu.falcaosl.com/release.json and are replaced when a GitHub Release is published.

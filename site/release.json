@@ -1,0 +1,6 @@
+{
+  "tag": "v2.0.8",
+  "arm64": "https://github.com/Falcao-SL/Lulu/releases/download/v2.0.8/Lulu-macos-arm64.dmg",
+  "intel": "https://github.com/Falcao-SL/Lulu/releases/download/v2.0.8/Lulu-macos-x86_64.dmg",
+  "page": "https://github.com/Falcao-SL/Lulu/releases/tag/v2.0.8"
+}
