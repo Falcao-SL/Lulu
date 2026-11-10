@@ -49,12 +49,12 @@ struct OverviewPane: View {
             VStack(alignment: .leading, spacing: Space.xs) {
                 Text(model.updateVersion.map { "Lulu \($0) is available" } ?? "Lulu \(AppUpdates.current)")
                     .font(LuluTheme.TypeStyle.body.weight(.medium))
-                Text(model.updateVersion == nil ? "Check for a newer release." : "Download the latest installer for this Mac.")
+                Text(model.updateVersion == nil ? "Check for a newer release." : "Install the latest version for this Mac.")
                     .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
             }
             Spacer()
             if model.updateURL != nil {
-                Button("Download update") { model.downloadUpdate() }.buttonStyle(.borderedProminent)
+                Button("Install update") { model.downloadUpdate() }.buttonStyle(.borderedProminent)
             } else {
                 Button(model.checkingUpdate ? "Checking…" : "Check for updates") { model.checkForUpdates(showFeedback: true) }
                     .disabled(model.checkingUpdate)

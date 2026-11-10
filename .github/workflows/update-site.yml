@@ -37,7 +37,7 @@ jobs:
         run: |
           set -euo pipefail
           test -n "${SSH_KEY:-}" || { echo "Missing HOMELAB_DEPLOY_SSH_KEY" >&2; exit 1; }
-          python3 Scripts/sync-site-release.py --output site/release.json
+          python3 Scripts/sync-site-release.py --output site/release.json --appcasts-dir site
           python3 -m json.tool site/release.json >/dev/null
           install -m 600 /dev/null "$RUNNER_TEMP/lulu-site-key"
           trap 'rm -f "$RUNNER_TEMP/lulu-site-key"' EXIT

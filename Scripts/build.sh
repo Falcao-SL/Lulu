@@ -12,8 +12,10 @@ case "$ARCH" in arm64|x86_64) ;; *) echo "Arquitetura inválida: $ARCH" >&2; exi
 
 echo "==> Building ${APP_NAME}..."
 mkdir -p "${BUILD_DIR}"
+SPARKLE_DIR="$(./Scripts/prepare-sparkle.sh)"
 swiftc -parse-as-library -O -target "${ARCH}-apple-macosx14.0" \
   -framework SwiftUI -framework AppKit -framework Security -lsqlite3 \
+  -F "${SPARKLE_DIR}" -framework Sparkle -Xlinker -rpath -Xlinker '@executable_path/../Frameworks' \
   Sources/LocalLLMManager/*.swift \
   -o "${BUILD_DIR}/Lulu"
 
@@ -29,11 +31,14 @@ echo "==> Packaging ${APP_BUNDLE}..."
 rm -rf "${APP_BUNDLE}"
 mkdir -p "${APP_BUNDLE}/Contents/MacOS"
 mkdir -p "${APP_BUNDLE}/Contents/Resources"
+mkdir -p "${APP_BUNDLE}/Contents/Frameworks"
+ditto "${SPARKLE_DIR}/Sparkle.framework" "${APP_BUNDLE}/Contents/Frameworks/Sparkle.framework"
 cp "${BUILD_DIR}/Lulu" "${APP_BUNDLE}/Contents/MacOS/Lulu"
 cp "${BUILD_DIR}/AppIcon.icns" "${APP_BUNDLE}/Contents/Resources/AppIcon.icns"
 mkdir -p "${APP_BUNDLE}/Contents/Resources/clients"
 cp Resources/clients/*.png "${APP_BUNDLE}/Contents/Resources/clients/"
 cp ThirdParty/Lucide/LICENSE "${APP_BUNDLE}/Contents/Resources/Lucide-LICENSE.txt"
+cp ThirdParty/Sparkle/LICENSE "${APP_BUNDLE}/Contents/Resources/Sparkle-LICENSE.txt"
 chmod +x "${APP_BUNDLE}/Contents/MacOS/Lulu"
 
 cat << PLIST > "${APP_BUNDLE}/Contents/Info.plist"
@@ -62,6 +67,14 @@ cat << PLIST > "${APP_BUNDLE}/Contents/Info.plist"
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
     <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>SUPublicEDKey</key>
+    <string>gxMz8reD1UWgxhGEe6M4KRjOOyMLZR8xteAHx4SXOhY=</string>
+    <key>SUFeedURL</key>
+    <string>https://lulu.falcaosl.com/appcast-${ARCH}.xml</string>
+    <key>SUEnableAutomaticChecks</key>
+    <true/>
+    <key>SUVerifyUpdateBeforeExtraction</key>
     <true/>
 </dict>
 </plist>

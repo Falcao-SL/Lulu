@@ -95,6 +95,17 @@ jobs:
           cd dist
           shasum -a 256 Lulu-*.zip Lulu-*.dmg > SHA256SUMS
 
+      - name: Sign update feeds
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD: ${{ steps.version.outputs.build }}
+          SPARKLE_ED25519_PRIVATE_KEY: ${{ secrets.SPARKLE_ED25519_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "${SPARKLE_ED25519_PRIVATE_KEY:-}"
+          export SPARKLE_DIR="$PWD/build/sparkle-2.10.1"
+          python3 Scripts/create-appcasts.py
+
       - name: Publish
         uses: softprops/action-gh-release@v2
         with:
@@ -118,6 +129,8 @@ jobs:
             dist/Lulu-${{ steps.version.outputs.version }}-macos-x86_64.dmg
             dist/Lulu-macos-x86_64.dmg
             dist/SHA256SUMS
+            dist/appcast-arm64.xml
+            dist/appcast-x86_64.xml
 
       - name: Publish completed release
         env:

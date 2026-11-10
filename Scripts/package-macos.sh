@@ -15,7 +15,15 @@ SIGNING_IDENTITY="${SIGNING_IDENTITY:--}"
 if [[ "$SIGNING_IDENTITY" == "-" ]]; then
   codesign --force --sign - "${APP}"
 else
-  codesign --force --sign "$SIGNING_IDENTITY" --keychain "${LULU_SIGNING_KEYCHAIN:?Missing signing keychain}" --options runtime --timestamp "${APP}"
+  keychain="${LULU_SIGNING_KEYCHAIN:?Missing signing keychain}"
+  sparkle="${APP}/Contents/Frameworks/Sparkle.framework"
+  sign=(codesign --force --sign "$SIGNING_IDENTITY" --keychain "$keychain" --options runtime --timestamp)
+  "${sign[@]}" "$sparkle/Versions/B/XPCServices/Installer.xpc"
+  "${sign[@]}" --preserve-metadata=entitlements "$sparkle/Versions/B/XPCServices/Downloader.xpc"
+  "${sign[@]}" "$sparkle/Versions/B/Autoupdate"
+  "${sign[@]}" "$sparkle/Versions/B/Updater.app"
+  "${sign[@]}" "$sparkle"
+  "${sign[@]}" "$APP"
 fi
 codesign --verify --deep --strict --verbose=2 "${APP}"
 

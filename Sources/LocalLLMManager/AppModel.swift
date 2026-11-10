@@ -127,6 +127,9 @@ final class AppModel: ObservableObject {
         Task { await rescanModels() }
         configureMonitor()
         tick()
+        #if canImport(Sparkle)
+        _ = SparkleUpdates.shared
+        #endif
         checkForUpdates()
     }
 
@@ -151,7 +154,11 @@ final class AppModel: ObservableObject {
 
     func downloadUpdate() {
         guard let url = updateURL else { return }
+        #if canImport(Sparkle)
+        SparkleUpdates.shared.checkForUpdates()
+        #else
         NSWorkspace.shared.open(url)
+        #endif
     }
 
     private var monitoringActive = true
