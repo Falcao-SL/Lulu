@@ -630,14 +630,16 @@ private struct SpeedPane: View {
                     tile("Liberável", Format.bytes(memory.purgeable))
                 }
                 Meter(footprint: fraction(memory.footprint, memory.total), other: fraction(otherUsed(memory), memory.total))
-                HStack {
-                    Label("Servidor", luluSymbol: "circle.fill").foregroundStyle(LuluTheme.accent)
-                    Label("Outros processos", luluSymbol: "circle.lefthalf.filled")
-                    Label("Disponível", luluSymbol: "circle")
-                    Spacer()
-                    Button("Purge de memória", luluSymbol: "sparkles") { model.confirmPurge = true }
+                HStack(spacing: LuluTheme.Space.lg) {
+                    memoryLegend("Servidor", value: memory.footprint, color: Meter.serverColor)
+                    memoryLegend("Outros processos", value: otherUsed(memory), color: Meter.otherColor)
+                    memoryLegend("Disponível", value: memory.available, color: Meter.availableColor)
                 }
                 .font(LuluTheme.TypeStyle.caption)
+                HStack {
+                    Spacer(minLength: 0)
+                    Button("Purge de memória", luluSymbol: "sparkles") { model.confirmPurge = true }
+                }
             }
             .padding(LuluTheme.Space.lg).luluCard()
 
@@ -647,6 +649,19 @@ private struct SpeedPane: View {
     }
 
     private let columns = Array(repeating: GridItem(.flexible(), alignment: .leading), count: 3)
+
+    private func memoryLegend(_ title: String, value: UInt64, color: Color) -> some View {
+        HStack(spacing: 6) {
+            RoundedRectangle(cornerRadius: 3).fill(color).frame(width: 12, height: 12)
+                .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(Color.primary.opacity(0.18)))
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).foregroundStyle(.secondary)
+                Text(Format.bytes(value)).fontWeight(.medium)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
 
     private func contextLine(_ memory: MemorySnapshot) -> String {
         if let peak = memory.contextPeak {
@@ -667,6 +682,9 @@ private struct SpeedPane: View {
 }
 
 private struct Meter: View {
+    static let serverColor = LuluTheme.accent
+    static let otherColor = Color.primary.opacity(0.28)
+    static let availableColor = Color.primary.opacity(0.08)
     var footprint: Double
     var other: Double
 
@@ -674,9 +692,9 @@ private struct Meter: View {
         GeometryReader { geo in
             let width = geo.size.width
             HStack(spacing: 0) {
-                Rectangle().fill(LuluTheme.accent).frame(width: width * footprint)
-                Rectangle().fill(Color.primary.opacity(0.28)).frame(width: width * min(other, max(0, 1 - footprint)))
-                Rectangle().fill(Color.primary.opacity(0.08))
+                Rectangle().fill(Self.serverColor).frame(width: width * footprint)
+                Rectangle().fill(Self.otherColor).frame(width: width * min(other, max(0, 1 - footprint)))
+                Rectangle().fill(Self.availableColor)
             }
         }
         .frame(height: 10)
