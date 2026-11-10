@@ -11,7 +11,7 @@ BUILD="${BUILD:-0}"
 echo "==> Building ${APP_NAME}..."
 mkdir -p "${BUILD_DIR}"
 swiftc -parse-as-library -O -target arm64-apple-macosx14.0 \
-  -framework SwiftUI -framework AppKit -framework Security \
+  -framework SwiftUI -framework AppKit -framework Security -lsqlite3 \
   Sources/LocalLLMManager/*.swift \
   -o "${BUILD_DIR}/Lulu"
 
@@ -29,6 +29,8 @@ mkdir -p "${APP_BUNDLE}/Contents/MacOS"
 mkdir -p "${APP_BUNDLE}/Contents/Resources"
 cp "${BUILD_DIR}/Lulu" "${APP_BUNDLE}/Contents/MacOS/Lulu"
 cp "${BUILD_DIR}/AppIcon.icns" "${APP_BUNDLE}/Contents/Resources/AppIcon.icns"
+mkdir -p "${APP_BUNDLE}/Contents/Resources/clients"
+cp Resources/clients/*.png "${APP_BUNDLE}/Contents/Resources/clients/"
 cp ThirdParty/Lucide/LICENSE "${APP_BUNDLE}/Contents/Resources/Lucide-LICENSE.txt"
 chmod +x "${APP_BUNDLE}/Contents/MacOS/Lulu"
 

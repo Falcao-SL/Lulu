@@ -113,6 +113,7 @@ struct OverviewPane: View {
             if model.phase == .ready {
                 Button(model.copied ? "Endpoint copiado" : "Copiar endpoint da API") { model.copyEndpoint() }
             }
+            ClientRack(model: model)
         }
         .padding(Space.lg)
         .luluCard()

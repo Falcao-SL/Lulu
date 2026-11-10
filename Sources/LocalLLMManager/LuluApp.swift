@@ -94,6 +94,9 @@ struct RootView: View {
         } message: {
             Text("Os arquivos saem de ~/models. O download parcial também pode ser tirado da fila.")
         }
+        .sheet(item: $model.configuredNotice) { notice in
+            ConfiguredSheet(notice: notice)
+        }
         .confirmationDialog("Purge de memória?", isPresented: $model.confirmPurge, titleVisibility: .visible) {
             Button("Purge", role: .destructive) { model.purge() }
             Button("Cancelar", role: .cancel) {}
@@ -481,19 +484,23 @@ private struct ServerPane: View {
             .padding(LuluTheme.Space.lg)
             .luluCard()
 
-            if serverActive {
-                HStack(spacing: LuluTheme.Space.md) {
-                    LuluIcon("link")
-                    Text(verbatim: "http://127.0.0.1:\(model.port)/v1")
-                        .font(LuluTheme.TypeStyle.body.monospaced()).textSelection(.enabled)
-                    Spacer()
+            HStack(spacing: LuluTheme.Space.md) {
+                LuluIcon("link")
+                Text(verbatim: "http://127.0.0.1:\(model.port)/v1")
+                    .font(LuluTheme.TypeStyle.body.monospaced()).textSelection(.enabled)
+                Spacer()
+                if serverActive {
                     Button(model.copied ? "Copiado" : "Copiar", luluSymbol: model.copied ? "checkmark" : "doc.on.doc") {
                         model.copyEndpoint()
                     }
                 }
-                .padding(LuluTheme.Space.lg)
-                .luluCard()
-            } else if model.models.isEmpty {
+            }
+            .padding(LuluTheme.Space.lg)
+            .luluCard()
+
+            ClientRack(model: model)
+
+            if !serverActive && model.models.isEmpty {
                 Button("Escolher um modelo", luluSymbol: "square.stack.3d.up") { model.pane = .models }
             }
             DisclosureGroup("Logs do servidor") {

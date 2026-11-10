@@ -65,6 +65,7 @@ final class AppModel: ObservableObject {
     @Published var logText = ""
     @Published var operationText = ""
     @Published var banner: String?
+    @Published var configuredNotice: ClientNotice?
     @Published var busyEngineID: String?
     @Published var downloadSpeed: Double = 0
     @Published var confirmRemoveEngine: String?
@@ -468,6 +469,32 @@ final class AppModel: ObservableObject {
         }
     }
 
+    func configure(_ client: ClientID) {
+        guard let item = runningModel ?? models.first(where: { $0.id == selectedModelID }) else {
+            banner = "Escolha um modelo antes de configurar o \(client.title)."
+            return
+        }
+        let currentPort = port
+        let context = contextLength
+        let vision = item.engineID == "mlx-vlm" || item.mmproj != nil
+        let name = item.name
+        let engineID = item.engineID
+        let path = item.path
+        Task {
+            let live = await Probe.servedModelID(port: currentPort, path: path)
+            let modelID = live ?? OpenCodeClient.fallbackID(engineID: engineID, path: path)
+            let request = ClientRequest(
+                port: currentPort, modelID: modelID, displayName: name,
+                context: context, vision: vision, engineID: engineID, liveID: live != nil
+            )
+            do {
+                configuredNotice = ClientNotice(client: client, detail: try ClientConfig.apply(client, request))
+            } catch {
+                banner = error.localizedDescription
+            }
+        }
+    }
+
     func persist() {
         let defaults = UserDefaults.standard
         defaults.set(selectedModelID, forKey: "lulu.model")
@@ -819,6 +846,24 @@ private enum Probe {
             return .ready
         }
         return nil
+    }
+
+    static func servedModelID(port: Int, path: String) async -> String? {
+        guard let (code, data) = await get(port, "/v1/models"), code == 200,
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let rows = object["data"] as? [[String: Any]] else { return nil }
+        let ids = rows.compactMap { $0["id"] as? String }
+        let file = URL(fileURLWithPath: path)
+        let resolved = file.resolvingSymlinksInPath().path
+        let filename = file.lastPathComponent
+        let stem = file.deletingPathExtension().lastPathComponent
+        if let exact = ids.first(where: { $0 == resolved || $0 == path || $0 == filename || $0 == stem }) {
+            return exact
+        }
+        return ids.first { id in
+            let url = URL(fileURLWithPath: id)
+            return url.lastPathComponent == filename || url.deletingPathExtension().lastPathComponent == stem
+        }
     }
 
     static func speed(port: Int) async -> (prompt: Double, predict: Double, peak: Int)? {

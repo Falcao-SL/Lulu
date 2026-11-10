@@ -13,7 +13,7 @@ O Lulu usa SwiftUI e requer **macOS 14 ou posterior em Apple Silicon**. Os motor
 | **Visão geral** | Status do servidor, modelo ativo, memória disponível, geração em tokens/s, modelos locais e downloads ativos. Atalhos mostram os próximos passos. |
 | **Motores** | Instalação integrada de mlx-lm, mlx-vlm e llama.cpp. O catálogo também instala Nativ, Ollama, LM Studio, Jan, Llama, GPT4All e vLLM Metal, e aponta o download de KoboldCpp, Strata e Colibri. |
 | **Modelos** | Busca com filtros de formato/publicador e ordenação, metadados de origem e quantização, seleção de arquivos, downloads e biblioteca local. |
-| **Servidor** | Seleção do modelo, contexto, porta, início/parada, endpoint e logs. |
+| **Servidor** | Seleção do modelo, contexto, porta, início/parada, endpoint, configuração do OpenCode e logs. |
 | **Desempenho** | Memória do processo, pesos, KV cache, contexto e memória do sistema. |
 
 ## Primeiro uso
@@ -21,9 +21,9 @@ O Lulu usa SwiftUI e requer **macOS 14 ou posterior em Apple Silicon**. Os motor
 1. Em **Motores**, instale o motor compatível com seu modelo. É necessário ter `uv` para MLX ou Homebrew para llama.cpp disponíveis no Mac.
 2. Em **Modelos**, busque um nome ou informe `organização/repositório`. Selecione os arquivos e baixe. Para MLX, inclua pesos, configuração e tokenizer; para GGUF, escolha a quantização desejada e o projetor multimodal quando necessário.
 3. Em **Servidor**, selecione o modelo, ajuste contexto e porta e clique em **Iniciar servidor**.
-4. Aguarde o status disponível. Copie o endpoint e use-o no aplicativo cliente compatível com a API OpenAI.
+4. Aguarde o status disponível. Copie o endpoint ou toque no ícone do programa em **Usar neste Mac**.
 
-O endereço padrão é `http://127.0.0.1:8000/v1`. O servidor escuta apenas neste Mac. O campo de modelo do cliente deve corresponder ao que o motor expõe em `/v1/models`.
+O endereço padrão é `http://127.0.0.1:8000/v1`. O servidor escuta apenas neste Mac. Os ícones configuram OpenCode, Codex, Antigravity, Cursor, Claude Code, OpenClaude, DeepSeek Harness, Aider e Zed sem apagar os outros provedores.
 
 Consulte o [guia de uso e diagnóstico](docs/guia.md) para arquivos locais, downloads e interpretação das métricas.
 
