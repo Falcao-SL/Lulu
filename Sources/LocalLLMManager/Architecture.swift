@@ -103,8 +103,8 @@ enum ModelScan {
         let trained = integer(source["max_position_embeddings"]) ?? integer(root["max_position_embeddings"])
         let total = integer(source["num_hidden_layers"]) ?? layers
         let summary = layers == total
-            ? "\(layers) camadas, float16"
-            : "\(layers) de \(total) camadas com KV, float16"
+            ? "\(layers) layers, float16"
+            : "\(layers) of \(total) layers with KV, float16"
         return ModelArch(
             kvLayers: layers,
             kvHeads: heads,
@@ -218,7 +218,7 @@ enum GGUF {
             headDim: headDim,
             trainedContext: values[prefix + "context_length"]?.int,
             elementBytes: 2,
-            summary: "\(layers) camadas, float16"
+            summary: "\(layers) layers, float16"
         )
     }
 

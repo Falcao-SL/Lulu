@@ -8,8 +8,8 @@ struct ClientRack: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: LuluTheme.Space.md) {
-            LuluSectionHeader("Usar neste Mac", symbol: "arrow.up.right")
-            Text("Cada ícone grava o servidor local na configuração daquele programa.")
+            LuluSectionHeader("Use on this Mac", symbol: "arrow.up.right")
+            Text("Each icon configures that application to use the local server.")
                 .font(LuluTheme.TypeStyle.caption)
                 .foregroundStyle(.secondary)
             LazyVGrid(columns: columns, alignment: .leading, spacing: LuluTheme.Space.sm) {
@@ -29,7 +29,7 @@ struct ClientRack: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(model.models.isEmpty && model.runningModel == nil)
-                    .accessibilityLabel("Configurar no \(client.title)")
+                    .accessibilityLabel("Configure in \(client.title)")
                 }
             }
         }
@@ -45,7 +45,7 @@ struct ConfiguredSheet: View {
             HStack(spacing: LuluTheme.Space.md) {
                 ClientIcon(name: notice.client.rawValue)
                 VStack(alignment: .leading, spacing: LuluTheme.Space.xs) {
-                    Text("Configurado")
+                    Text("Configured")
                         .font(LuluTheme.TypeStyle.page)
                     Text(notice.client.title)
                         .font(LuluTheme.TypeStyle.body)

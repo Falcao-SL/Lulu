@@ -6,23 +6,23 @@ struct HubMetadataView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: LuluTheme.Space.sm) {
             adaptiveRow {
-                Label("Publicador · \(hit.publisher)", luluSymbol: "person.crop.square")
-                Label("Laboratório de origem · \(hit.laboratory)", luluSymbol: "building.2")
+                Label("Publisher · \(hit.publisher)", luluSymbol: "person.crop.square")
+                Label("Source laboratory · \(hit.laboratory)", luluSymbol: "building.2")
             }
 
             adaptiveRow {
                 Label(hit.format, luluSymbol: "cube")
-                    .accessibilityLabel("Formato · \(hit.format)")
-                Text("Quantização · \(hit.quantization)")
+                    .accessibilityLabel("Format · \(hit.format)")
+                Text("Quantization · \(hit.quantization)")
                 if hit.parameters > 0 {
                     let billions = Double(hit.parameters) / 1_000_000_000
-                    Text("\(billions, format: .number.precision(.fractionLength(1)))B parâmetros")
+                    Text("\(billions, format: .number.precision(.fractionLength(1)))B parameters")
                 }
             }
             .foregroundStyle(.primary)
 
             if !hit.baseModel.isEmpty {
-                Text("Modelo base · \(hit.baseModel)")
+                Text("Base model · \(hit.baseModel)")
                     .textSelection(.enabled)
             }
             if !hit.task.isEmpty || !hit.license.isEmpty || !hit.modified.isEmpty {
@@ -30,7 +30,7 @@ struct HubMetadataView: View {
                     if !hit.task.isEmpty { Label(hit.task, luluSymbol: "text.bubble") }
                     if !hit.license.isEmpty { Label(hit.license, luluSymbol: "doc.plaintext") }
                     if !hit.modified.isEmpty {
-                        Text("Atualizado em \(String(hit.modified.prefix(10)))")
+                        Text("Updated \(String(hit.modified.prefix(10)))")
                     }
                 }
             }
@@ -67,12 +67,12 @@ struct HubResultView: View {
                     .accessibilityLabel(hit.id)
                 Spacer(minLength: 0)
                 if selected {
-                    LuluStatusBadge("Selecionado", tone: .success)
+                    LuluStatusBadge("Selected", tone: .success)
                 } else {
-                    Button(action: action) { Label("Ver arquivos", luluSymbol: "folder") }
+                    Button(action: action) { Label("View files", luluSymbol: "folder") }
                         .controlSize(.small)
                         .buttonStyle(.bordered)
-                        .accessibilityLabel("Ver arquivos de \(hit.id)")
+                        .accessibilityLabel("View files for \(hit.id)")
                 }
             }
 
@@ -80,7 +80,7 @@ struct HubResultView: View {
             Divider()
             HStack(spacing: LuluTheme.Space.lg) {
                 Label("\(Format.tokens(hit.downloads)) downloads", luluSymbol: "arrow.down")
-                Label("\(Format.tokens(hit.likes)) curtidas", luluSymbol: "heart")
+                Label("\(Format.tokens(hit.likes)) likes", luluSymbol: "heart")
                 Spacer(minLength: 0)
                 if let repositoryURL = URL(string: "https://huggingface.co/\(hit.id)") {
                     Link(destination: repositoryURL) {

@@ -19,13 +19,13 @@ enum EngineCatalog {
         Spec(
             id: "mlx-lm",
             name: "mlx-lm",
-            blurb: "Texto em MLX. API compatível com a OpenAI.",
+            blurb: "Text in MLX with an OpenAI-compatible API.",
             install: .uv(package: "mlx-lm", directory: "mlx-lm", distPrefix: "mlx_lm-", binary: "mlx_lm.server")
         ),
         Spec(
             id: "mlx-vlm",
             name: "mlx-vlm",
-            blurb: "Texto e visão em MLX. A mesma API.",
+            blurb: "Text and vision in MLX with an OpenAI-compatible API.",
             install: .uv(package: "mlx-vlm", directory: "mlx-vlm", distPrefix: "mlx_vlm-", binary: "mlx_vlm.server")
         ),
         ]
@@ -33,7 +33,7 @@ enum EngineCatalog {
         items += [Spec(
             id: "llama.cpp",
             name: "llama.cpp",
-            blurb: "GGUF no llama-server, com flash attention na GPU.",
+            blurb: "GGUF on llama-server with GPU flash attention.",
             install: .brew(formula: "llama.cpp", cellar: "llama.cpp", binary: "llama-server")
         )]
         return items
@@ -114,9 +114,9 @@ enum EngineCatalog {
     static func missingInstallerMessage(for spec: Spec) -> String? {
         switch spec.install {
         case .uv:
-            return uvBinary() == nil ? "O uv não está em ~/.local/bin nem no Homebrew." : nil
+            return uvBinary() == nil ? "uv was not found in ~/.local/bin or Homebrew." : nil
         case .brew:
-            return brewBinary() == nil ? "O Homebrew não está em /opt/homebrew nem em /usr/local." : nil
+            return brewBinary() == nil ? "Homebrew was not found in /opt/homebrew or /usr/local." : nil
         }
     }
 

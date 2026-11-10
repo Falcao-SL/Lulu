@@ -91,28 +91,28 @@ enum ClientConfig {
 
     private static func message(_ client: ClientID, _ request: ClientRequest) -> String {
         let name = request.displayName
-        let estimate = request.liveID ? "" : " O servidor estava parado, então o identificador é uma estimativa."
+        let estimate = request.liveID ? "" : " The server was stopped, so the model ID is an estimate."
         switch client {
         case .opencode:
-            return "OpenCode agora usa \(name) em \(request.baseURL).\(estimate) Reinicie o OpenCode se ele já estiver aberto."
+            return "OpenCode now uses \(name) at \(request.baseURL).\(estimate) Restart OpenCode if it is open."
         case .codex:
-            let protocolNote = request.engineID == "mlx-lm" ? " O Codex chama /v1/responses, e o mlx-lm não oferece esse caminho." : ""
-            return "Codex agora usa \(name) em \(request.baseURL).\(estimate)\(protocolNote) Abra um Codex novo."
+            let protocolNote = request.engineID == "mlx-lm" ? " Codex uses /v1/responses, which mlx-lm does not support." : ""
+            return "Codex now uses \(name) at \(request.baseURL).\(estimate)\(protocolNote) Open a new Codex session."
         case .agy:
-            return "Antigravity agora usa \(name) em \(request.origin).\(estimate) Abra um terminal novo para carregar o gateway."
+            return "Antigravity now uses \(name) at \(request.origin).\(estimate) Open a new terminal to load the gateway."
         case .cursor:
-            return "Cursor agora aponta para \(request.baseURL) com \(name).\(estimate) Feche e abra o Cursor. Se ele pedir a chave da OpenAI, use lulu."
+            return "Cursor now points to \(request.baseURL) with \(name).\(estimate) Restart Cursor. If it asks for an OpenAI key, use lulu."
         case .claude:
-            let protocolNote = request.engineID == "mlx-lm" ? " O Claude Code chama /v1/messages, e o mlx-lm não oferece esse caminho." : ""
-            return "Claude Code agora usa \(name) em \(request.origin).\(estimate)\(protocolNote) Abra uma sessão nova."
+            let protocolNote = request.engineID == "mlx-lm" ? " Claude Code uses /v1/messages, which mlx-lm does not support." : ""
+            return "Claude Code now uses \(name) at \(request.origin).\(estimate)\(protocolNote) Open a new session."
         case .openclaude:
-            return "OpenClaude agora usa \(name) em \(request.baseURL).\(estimate) Abra o OpenClaude de novo."
+            return "OpenClaude now uses \(name) at \(request.baseURL).\(estimate) Restart OpenClaude."
         case .deepseek:
-            return "DeepSeek Harness ganhou o provedor lulu em \(request.baseURL).\(estimate) Escolha lulu no seletor se ele não entrar sozinho."
+            return "DeepSeek Harness has a lulu provider at \(request.baseURL).\(estimate) Select lulu if it is not selected automatically."
         case .aider:
-            return "Aider agora usa \(name) em \(request.baseURL).\(estimate)"
+            return "Aider now uses \(name) at \(request.baseURL).\(estimate)"
         case .zed:
-            return "Zed agora usa \(name) em \(request.baseURL).\(estimate) Reabra o Zed."
+            return "Zed now uses \(name) at \(request.baseURL).\(estimate) Restart Zed."
         }
     }
 
@@ -169,7 +169,7 @@ enum ClientConfig {
         if FileManager.default.fileExists(atPath: settings.path) {
             let data = try Data(contentsOf: settings)
             guard let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                throw Failure(message: "Não reescrevi o Antigravity: settings.json não é JSON puro.")
+                throw Failure(message: "Could not update Antigravity: settings.json is not valid JSON.")
             }
             root = parsed
         }
@@ -191,11 +191,11 @@ enum ClientConfig {
 
     private static func writeCursor(_ request: ClientRequest, database: URL) throws {
         guard FileManager.default.fileExists(atPath: database.path) else {
-            throw Failure(message: "O Cursor ainda não tem configuração neste Mac.")
+            throw Failure(message: "Cursor has no configuration on this Mac.")
         }
         var db: OpaquePointer?
         guard sqlite3_open_v2(database.path, &db, SQLITE_OPEN_READWRITE, nil) == SQLITE_OK else {
-            throw Failure(message: "Não consegui abrir a configuração do Cursor.")
+            throw Failure(message: "Could not open Cursor configuration.")
         }
         defer { sqlite3_close(db) }
         sqlite3_busy_timeout(db, 3000)
@@ -212,21 +212,21 @@ enum ClientConfig {
         if let range = text.range(of: "\"openAIBaseUrl\":null") {
             text.replaceSubrange(range, with: "\"openAIBaseUrl\":\(quotedURL)")
         } else if !replaceJSONStringField(&text, key: "openAIBaseUrl", value: quotedURL, after: text.startIndex) {
-            throw Failure(message: "Não achei o endereço da OpenAI na configuração do Cursor.")
+            throw Failure(message: "Could not find the OpenAI address in Cursor configuration.")
         }
         text = text.replacingOccurrences(of: "\"useOpenAIKey\":false", with: "\"useOpenAIKey\":true")
         let marker = "\"composer\":{\"modelName\":"
         guard let composer = text.range(of: marker) else {
-            throw Failure(message: "Não achei o modelo do Cursor para trocar.")
+            throw Failure(message: "Could not find the Cursor model to replace.")
         }
         guard replaceJSONStringField(&text, key: "modelName", value: quotedModel, after: composer.lowerBound),
               replaceJSONStringField(&text, key: "modelId", value: quotedModel, after: composer.lowerBound) else {
-            throw Failure(message: "Não consegui trocar o modelo selecionado no Cursor.")
+            throw Failure(message: "Could not change the selected Cursor model.")
         }
         if !text.contains("\"name\":\(quotedModel)") {
             let listKey = "\"availableDefaultModels2\":["
             guard let list = text.range(of: listKey) else {
-                throw Failure(message: "Não achei a lista de modelos do Cursor.")
+                throw Failure(message: "Could not find the Cursor model list.")
             }
             let entry = cursorModel(request, quotedModel: quotedModel)
             let next = text[list.upperBound...].first
@@ -247,7 +247,7 @@ enum ClientConfig {
         if FileManager.default.fileExists(atPath: file.path) {
             let data = try Data(contentsOf: file)
             guard let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                throw Failure(message: "Não reescrevi o Claude Code: settings.json não é JSON puro.")
+                throw Failure(message: "Could not update Claude Code: settings.json is not valid JSON.")
             }
             root = parsed
         }
@@ -266,7 +266,7 @@ enum ClientConfig {
         if FileManager.default.fileExists(atPath: file.path) {
             let data = try Data(contentsOf: file)
             guard let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                throw Failure(message: "Não reescrevi o OpenClaude: settings.json não é JSON puro.")
+                throw Failure(message: "Could not update OpenClaude: settings.json is not valid JSON.")
             }
             root = parsed
         }
@@ -343,7 +343,7 @@ enum ClientConfig {
         if FileManager.default.fileExists(atPath: file.path) {
             let data = try Data(contentsOf: file)
             guard let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                throw Failure(message: "Não reescrevi o Zed: settings.json não é JSON puro.")
+                throw Failure(message: "Could not update Zed: settings.json is not valid JSON.")
             }
             root = parsed
         }
@@ -409,12 +409,12 @@ enum ClientConfig {
     private static func sqliteText(_ db: OpaquePointer?, _ sql: String, _ key: String) throws -> String {
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
-            throw Failure(message: "Não consegui ler a configuração do Cursor.")
+            throw Failure(message: "Could not read Cursor configuration.")
         }
         defer { sqlite3_finalize(statement) }
         bind(statement, 1, key)
         guard sqlite3_step(statement) == SQLITE_ROW, let raw = sqlite3_column_text(statement, 0) else {
-            throw Failure(message: "A configuração do Cursor não tem o registro do modelo.")
+            throw Failure(message: "Cursor configuration has no model entry.")
         }
         return String(cString: raw)
     }
@@ -422,13 +422,13 @@ enum ClientConfig {
     private static func sqliteUpdate(_ db: OpaquePointer?, _ sql: String, _ value: String, _ key: String) throws {
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
-            throw Failure(message: "Não consegui gravar a configuração do Cursor.")
+            throw Failure(message: "Could not save Cursor configuration.")
         }
         defer { sqlite3_finalize(statement) }
         bind(statement, 1, value)
         bind(statement, 2, key)
         guard sqlite3_step(statement) == SQLITE_DONE else {
-            throw Failure(message: "O Cursor segurou a configuração. Feche o Cursor e tente de novo.")
+            throw Failure(message: "Cursor is holding its configuration. Close Cursor and try again.")
         }
     }
 

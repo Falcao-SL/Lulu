@@ -51,6 +51,7 @@ final class AppModel: ObservableObject {
     @Published var searchFormat = ""
     @Published var searchSort = "downloads"
     @Published var searchFinished = false
+    @Published var showAllHubResults = false
     @Published var selectedHubHit: HubHit?
     private var hubRequestID = UUID()
     @Published var searching = false
@@ -153,31 +154,31 @@ final class AppModel: ObservableObject {
 
     func refreshTokenNote() {
         if !TokenStore.load().isEmpty {
-            tokenNote = "Chave guardada no Keychain deste Mac."
+            tokenNote = "Token saved in this Mac’s Keychain."
         } else if let env = ProcessInfo.processInfo.environment["HF_TOKEN"] ?? ProcessInfo.processInfo.environment["HUGGING_FACE_HUB_TOKEN"], !env.isEmpty {
-            tokenNote = "Sem chave guardada. Os pedidos usam HF_TOKEN do ambiente."
+            tokenNote = "No saved token. Requests use HF_TOKEN from the environment."
         } else {
-            tokenNote = "Nenhuma chave. Modelos públicos baixam assim mesmo."
+            tokenNote = "No token saved. Public models can still be downloaded."
         }
     }
 
     func saveToken() {
         let trimmed = tokenDraft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            banner = "Cole a chave antes de guardar."
+            banner = "Enter a token before saving."
             return
         }
         TokenStore.save(trimmed)
         tokenDraft = ""
         refreshTokenNote()
-        banner = "Chave do Hugging Face guardada no Keychain."
+        banner = "Hugging Face token saved in Keychain."
     }
 
     func clearToken() {
         TokenStore.save("")
         tokenDraft = ""
         refreshTokenNote()
-        banner = "Chave apagada deste Mac."
+        banner = "Token removed from this Mac."
     }
 
     func refreshEngines() {
@@ -229,14 +230,14 @@ final class AppModel: ObservableObject {
         }
         confirmDeleteModel = nil
         if runningModel?.path == model.path, phase != .stopped {
-            banner = "Pare o servidor antes de apagar este modelo."
+            banner = "Stop the server before deleting this model."
             return
         }
         let root = LuluPaths.models.resolvingSymlinksInPath().path
         let target = URL(fileURLWithPath: model.path).resolvingSymlinksInPath().path
         guard target.hasPrefix(root + "/") else { return }
         if jobs.contains(where: { $0.state == .running && target.hasPrefix($0.destination) }) {
-            banner = "Pause o download deste modelo antes de apagar."
+            banner = "Pause this model’s download before deleting it."
             return
         }
         do {
@@ -258,6 +259,7 @@ final class AppModel: ObservableObject {
     }
 
     func searchHub() {
+        showAllHubResults = false
         let query = repoQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty || !searchAuthor.isEmpty || !searchFormat.isEmpty else { return }
         if let repo = Hub.parseRepo(query) {
@@ -286,7 +288,7 @@ final class AppModel: ObservableObject {
                 hubHits = hits
                 searchFinished = true
                 searching = false
-                if hubHits.isEmpty { banner = "Nenhum modelo encontrado." }
+                if hubHits.isEmpty { banner = "No models found." }
             } catch let error as HubError {
                 guard hubRequestID == requestID else { return }
                 searching = false
@@ -318,7 +320,7 @@ final class AppModel: ObservableObject {
                 listedFiles = files
                 listedRepo = repo
                 searching = false
-                if listedFiles.isEmpty { banner = "Esse repositório não listou arquivos." }
+                if listedFiles.isEmpty { banner = "This repository returned no files." }
             } catch let error as HubError {
                 guard hubRequestID == requestID else { return }
                 searching = false
@@ -334,7 +336,7 @@ final class AppModel: ObservableObject {
     func enqueueSelected() {
         let chosen = listedFiles.filter(\.selected)
         guard !listedRepo.isEmpty, !chosen.isEmpty else {
-            banner = "Escolha ao menos um arquivo."
+            banner = "Select at least one file."
             return
         }
         let destination = Hub.destination(repo: listedRepo, files: chosen)
@@ -384,25 +386,25 @@ final class AppModel: ObservableObject {
     func startServer() {
         guard phase == .stopped || phase == .failed else { return }
         guard let model = models.first(where: { $0.id == selectedModelID }) else {
-            banner = "Escolha um modelo."
+            banner = "Choose a model."
             return
         }
         #if arch(x86_64)
         guard model.engineID == "llama.cpp" else {
-            banner = "Modelos MLX exigem Apple Silicon. Neste Mac Intel, use um modelo GGUF com llama.cpp."
+            banner = "MLX models require Apple Silicon. On Intel Macs, use GGUF with llama.cpp."
             return
         }
         #endif
         guard contextLength > 0 else {
-            banner = "Escolha um contexto maior que zero."
+            banner = "Choose a context greater than zero."
             return
         }
         if let limit = selectedContextLimit, contextLength > limit {
-            banner = "Este modelo informa um máximo de \(Format.tokens(limit)) tokens. Ajuste o contexto antes de iniciar."
+            banner = "This model reports a maximum of \(Format.tokens(limit)) tokens. Adjust the context before starting."
             return
         }
         guard let engine = engines.first(where: { $0.id == model.engineID }), engine.installed, !engine.binary.isEmpty else {
-            banner = "O motor \(model.engineID) não está instalado."
+            banner = "The \(model.engineID) engine is not installed."
             pane = .engines
             return
         }
@@ -457,7 +459,7 @@ final class AppModel: ObservableObject {
                 if self.expectExit || self.serverPID != process.processIdentifier { return }
                 self.serverPID = 0
                 self.phase = .failed
-                self.banner = "O motor saiu com código \(process.terminationStatus)."
+                self.banner = "The engine exited with code \(process.terminationStatus)."
             }
         }
         persist()
@@ -484,11 +486,11 @@ final class AppModel: ObservableObject {
             await MainActor.run {
                 self?.tick()
                 if code == 0 {
-                    self?.banner = "Purge feito. Disponível foi de \(Format.bytes(before)) para \(Format.bytes(after))."
+                    self?.banner = "Purge complete. Available memory changed from \(Format.bytes(before)) to \(Format.bytes(after))."
                 } else if pid > 0 {
-                    self?.banner = "Servidor derrubado. O purge do sistema foi cancelado."
+                    self?.banner = "Server stopped. System purge was canceled."
                 } else {
-                    self?.banner = "O purge do sistema foi cancelado."
+                    self?.banner = "System purge was canceled."
                 }
             }
         }
@@ -507,7 +509,7 @@ final class AppModel: ObservableObject {
 
     func configure(_ client: ClientID) {
         guard let item = runningModel ?? models.first(where: { $0.id == selectedModelID }) else {
-            banner = "Escolha um modelo antes de configurar o \(client.title)."
+            banner = "Choose a model before configuring \(client.title)."
             return
         }
         let currentPort = port
@@ -541,7 +543,7 @@ final class AppModel: ObservableObject {
     func installAdditionalEngine(_ id: String) {
         guard busyEngineID == nil else { return }
         guard let brew = Machine.executable(["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]) else {
-            banner = "Instale o Homebrew ou use o download oficial do motor."
+            banner = "Install Homebrew or use the engine’s official download."
             return
         }
         let major = ProcessInfo.processInfo.operatingSystemVersion.majorVersion
@@ -549,7 +551,7 @@ final class AppModel: ObservableObject {
         switch id {
         case "nativ":
             guard major >= 26 else {
-                banner = "O Nativ requer macOS 26 ou posterior."
+                banner = "Nativ requires macOS 26 or later."
                 return
             }
             steps = [["install", "--cask", "nativ"]]
@@ -558,14 +560,14 @@ final class AppModel: ObservableObject {
         case "jan": steps = [["install", "--cask", "jan"]]
         case "llama":
             guard major >= 15 else {
-                banner = "O Llama requer macOS 15 ou posterior."
+                banner = "Llama requires macOS 15 or later."
                 return
             }
             steps = [["install", "--cask", "llama-app"]]
         case "gpt4all": steps = [["install", "--cask", "gpt4all"]]
         case "vllm":
             guard major >= 15 else {
-                banner = "vLLM Metal requer macOS 15 ou posterior."
+                banner = "vLLM Metal requires macOS 15 or later."
                 return
             }
             steps = [["tap", "vllm-project/vllm-metal", "https://github.com/vllm-project/vllm-metal"],
@@ -573,7 +575,7 @@ final class AppModel: ObservableObject {
         default: return
         }
         busyEngineID = id
-        operationText = "Instalando \(id) via Homebrew…\n"
+        operationText = "Installing \(id) via Homebrew…\n"
         Task { [weak self] in
             for arguments in steps {
                 self?.appendOperation("$ brew " + arguments.joined(separator: " ") + "\n")
@@ -585,14 +587,14 @@ final class AppModel: ObservableObject {
                 }.value
                 guard code == 0 else {
                     self?.busyEngineID = nil
-                    self?.banner = "Instalação de \(id) interrompida (código \(code)). Consulte a atividade de instalação."
+                    self?.banner = "Installation of \(id) failed (code \(code)). See installation activity."
                     return
                 }
             }
             self?.busyEngineID = nil
             self?.banner = id == "gpt4all"
-                ? "O instalador do GPT4All foi baixado. Conclua a instalação na janela do Homebrew."
-                : "Instalação de \(id) concluída. Configure os modelos e a execução pelo próprio motor."
+                ? "The GPT4All installer was downloaded. Finish installation in the Homebrew window."
+                : "Installation of \(id) is complete. Configure models and execution in the engine."
         }
     }
 
@@ -619,7 +621,7 @@ final class AppModel: ObservableObject {
                 self?.busyEngineID = nil
                 self?.refreshEngines()
                 if code != 0 {
-                    self?.banner = "\(spec.name) saiu com código \(code)."
+                    self?.banner = "\(spec.name) exited with code \(code)."
                 }
             }
         }
@@ -671,7 +673,7 @@ final class AppModel: ObservableObject {
         if serverPID > 0, kill(serverPID, 0) != 0, !expectExit {
             serverPID = 0
             phase = .failed
-            banner = "O motor parou."
+            banner = "The engine stopped."
         }
         if monitoringActive && (pane == .overview || pane == .speed) {
             let next = makeSnapshot()
@@ -729,7 +731,7 @@ final class AppModel: ObservableObject {
             contextTokens: contextLength,
             contextPeak: memory.contextPeak,
             trainedContext: arch?.trainedContext,
-            kvSummary: arch?.summary ?? "sem metadado de KV",
+            kvSummary: arch?.summary ?? "KV metadata unavailable",
             promptRate: memory.promptRate,
             predictRate: memory.predictRate
         )

@@ -49,6 +49,8 @@ cat << PLIST > "${APP_BUNDLE}/Contents/Info.plist"
     <string>com.falcaosl.lulu</string>
     <key>CFBundleName</key>
     <string>Lulu</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
     <key>CFBundleDisplayName</key>
     <string>Lulu</string>
     <key>CFBundlePackageType</key>

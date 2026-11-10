@@ -15,11 +15,11 @@ struct LuluApp: App {
         .windowResizability(.contentMinSize)
         .commands {
             CommandGroup(after: .help) {
-                Button("Guia visual do Lulu") { openWindow(id: "design-guide") }
+                Button("Lulu design guide") { openWindow(id: "design-guide") }
             }
         }
 
-        Window("Guia visual do Lulu", id: "design-guide") {
+        Window("Lulu design guide", id: "design-guide") {
             LuluDesignGuide()
         }
         .defaultSize(width: 850, height: 740)
@@ -37,17 +37,17 @@ struct RootView: View {
                     LuluEmblem(side: 44)
                     VStack(alignment: .leading, spacing: 0) {
                         Text("Lulu").font(.system(size: 22, weight: .semibold, design: .rounded))
-                        Text("Sua IA, neste Mac").font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
+                        Text("Your AI, on this Mac").font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
                     }
                 }
                 .padding(.horizontal, 12)
                 .padding(.top, 8)
                 VStack(spacing: LuluTheme.Space.xs) {
-                    navigationItem("Visão geral", "square.grid.2x2", .overview)
-                    navigationItem("Motores", "cpu", .engines)
-                    navigationItem("Modelos", "square.and.arrow.down", .models)
-                    navigationItem("Servidor", "server.rack", .server)
-                    navigationItem("Desempenho", "gauge.with.dots.needle.67percent", .speed)
+                    navigationItem("Overview", "square.grid.2x2", .overview)
+                    navigationItem("Engines", "cpu", .engines)
+                    navigationItem("Models", "square.and.arrow.down", .models)
+                    navigationItem("Server", "server.rack", .server)
+                    navigationItem("Performance", "gauge.with.dots.needle.67percent", .speed)
                 }.padding(.horizontal, LuluTheme.Space.sm)
                 Spacer()
 
@@ -61,7 +61,7 @@ struct RootView: View {
                             .accessibilityHidden(true)
                         Text(banner).font(LuluTheme.TypeStyle.body)
                         Spacer()
-                        Button("Fechar") { model.banner = nil }.buttonStyle(.borderless)
+                        Button("Close") { model.banner = nil }.buttonStyle(.borderless)
                     }
                     .padding(LuluTheme.Space.md)
                     .luluCard()
@@ -82,26 +82,26 @@ struct RootView: View {
         .onChange(of: scenePhase) { _, phase in model.setMonitoringActive(phase == .active) }
         .tint(LuluTheme.accent)
         .accentColor(LuluTheme.accent)
-        .confirmationDialog("Remover este motor?", isPresented: removeShown, titleVisibility: .visible) {
-            Button("Remover", role: .destructive) { model.confirmEngineRemoval() }
-            Button("Cancelar", role: .cancel) {}
+        .confirmationDialog("Remove this engine?", isPresented: removeShown, titleVisibility: .visible) {
+            Button("Remove", role: .destructive) { model.confirmEngineRemoval() }
+            Button("Cancel", role: .cancel) {}
         } message: {
-            Text("O programa sai do disco. Os modelos em ~/models ficam.")
+            Text("The engine will be removed. Models in ~/models will remain.")
         }
-        .confirmationDialog("Apagar este modelo?", isPresented: deleteShown, titleVisibility: .visible) {
-            Button("Apagar", role: .destructive) { model.confirmModelDeletion() }
-            Button("Cancelar", role: .cancel) {}
+        .confirmationDialog("Delete this model?", isPresented: deleteShown, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) { model.confirmModelDeletion() }
+            Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Os arquivos saem de ~/models. O download parcial também pode ser tirado da fila.")
+            Text("The files will be removed from ~/models. A partial download can also be removed from the queue.")
         }
         .sheet(item: $model.configuredNotice) { notice in
             ConfiguredSheet(notice: notice)
         }
-        .confirmationDialog("Purge de memória?", isPresented: $model.confirmPurge, titleVisibility: .visible) {
+        .confirmationDialog("Purge memory?", isPresented: $model.confirmPurge, titleVisibility: .visible) {
             Button("Purge", role: .destructive) { model.purge() }
-            Button("Cancelar", role: .cancel) {}
+            Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Derruba o servidor, solta pesos, KV cache e contexto, e pede ao macOS para liberar a memória inativa.")
+            Text("Stops the server, releases model weights and KV cache, and asks macOS to purge inactive memory.")
         }
     }
 
@@ -159,13 +159,13 @@ private struct EnginesPane: View {
     var body: some View {
         VStack(alignment: .leading, spacing: LuluTheme.Space.lg) {
             HStack {
-                LuluPageHeader("Motores", symbol: "cpu")
+                LuluPageHeader("Engines", symbol: "cpu")
                 Spacer()
-                Button("Atualizar", luluSymbol: "arrow.clockwise") { model.refreshEngines() }
+                Button("Refresh", luluSymbol: "arrow.clockwise") { model.refreshEngines() }
             }
-            LuluSectionHeader("Motores integrados", symbol: "slider.horizontal.3")
+            LuluSectionHeader("Built-in engines", symbol: "slider.horizontal.3")
             #if arch(x86_64)
-            Text("Neste Mac Intel, use modelos GGUF com llama.cpp. Os motores MLX requerem Apple Silicon.")
+            Text("On Intel Macs, use GGUF models with llama.cpp. MLX engines require Apple Silicon.")
                 .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
             #endif
             ForEach(model.engines) { engine in
@@ -182,12 +182,12 @@ private struct EnginesPane: View {
                     VStack(alignment: .trailing, spacing: LuluTheme.Space.sm) {
                         LuluStatusBadge(statusTitle(engine), tone: engine.installed ? .success : .neutral)
                         if model.busyEngineID == engine.id {
-                            ProgressView("Em andamento").controlSize(.small)
+                            ProgressView("In progress").controlSize(.small)
                         } else if engine.installed && engine.managed {
-                            Button("Remover", role: .destructive) { model.removeEngine(engine.id) }
+                            Button("Remove", role: .destructive) { model.removeEngine(engine.id) }
                                 .disabled(model.busyEngineID != nil)
                         } else if !engine.installed {
-                            Button("Instalar", luluSymbol: "arrow.down.circle") { model.installEngine(engine.id) }
+                            Button("Install", luluSymbol: "arrow.down.circle") { model.installEngine(engine.id) }
                                 .disabled(model.busyEngineID != nil)
                                 .buttonStyle(.borderedProminent)
                         }
@@ -197,16 +197,16 @@ private struct EnginesPane: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .luluCard()
             }
-            DisclosureGroup("Atividade de instalação") {
-                logBox(model.operationText, empty: "A instalação e a remoção aparecem aqui.")
+            DisclosureGroup("Installation activity") {
+                logBox(model.operationText, empty: "Installation and removal activity appears here.")
             }
             AdditionalEnginesView(model: model)
         }
     }
 
     private func statusTitle(_ engine: EngineStatus) -> String {
-        if !engine.installed { return "Disponível" }
-        return engine.managed ? "Instalado" : "Instalação manual"
+        if !engine.installed { return "Available" }
+        return engine.managed ? "Installed" : "Manual installation"
     }
 
     private func engineLine(_ engine: EngineStatus) -> String {
@@ -224,28 +224,29 @@ private struct ModelsPane: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: LuluTheme.Space.lg) {
-                LuluPageHeader("Modelos", symbol: "square.stack.3d.up")
+                LuluPageHeader("Models", symbol: "square.stack.3d.up")
                 libraryCard
                 downloadCard
-                DisclosureGroup("Acesso ao Hugging Face · opcional") {
+                DisclosureGroup("Hugging Face access · optional") {
                     keyCard.padding(.top, 8)
                 }
             }
         }
+        .onChange(of: model.repoQuery) { _, _ in model.showAllHubResults = false }
     }
 
     private var keyCard: some View {
         VStack(alignment: .leading, spacing: LuluTheme.Space.sm) {
-            LuluSectionHeader("Chave do Hugging Face", symbol: "key")
-            Text("Cole a chave que começa com hf_. Ela fica no Keychain e só sai no pedido de busca ou download.").font(.callout).foregroundStyle(.secondary)
+            LuluSectionHeader("Hugging Face token", symbol: "key")
+            Text("Enter your hf_ token. It is stored in Keychain and sent only for search and downloads.").font(.callout).foregroundStyle(.secondary)
             HStack {
                 SecureField("hf_…", text: $model.tokenDraft)
                     .textFieldStyle(.roundedBorder)
-                Button("Guardar chave") { model.saveToken() }
+                Button("Save token") { model.saveToken() }
                     .buttonStyle(.borderedProminent)
                     .tint(LuluTheme.accent)
                     .disabled(model.tokenDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                Button("Apagar chave") { model.clearToken() }
+                Button("Delete token") { model.clearToken() }
             }
             Text(model.tokenNote).font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
         }
@@ -256,57 +257,63 @@ private struct ModelsPane: View {
 
     private var downloadCard: some View {
         VStack(alignment: .leading, spacing: LuluTheme.Space.sm) {
-            LuluSectionHeader("Explorar modelos", symbol: "magnifyingglass")
+            LuluSectionHeader("Explore models", symbol: "magnifyingglass")
             HStack {
-                TextField("organização/modelo ou um pedaço do nome", text: $model.repoQuery)
+                TextField("organization/model or part of a name", text: $model.repoQuery)
                     .textFieldStyle(.roundedBorder)
                     .onSubmit { model.searchHub() }
-                Button(model.searching ? "Buscando…" : "Buscar") { model.searchHub() }
+                Button(model.searching ? "Searching…" : "Search") {
+                    model.showAllHubResults = false
+                    model.searchHub()
+                }
                     .disabled(model.searching)
             }
             HStack {
-                TextField("Publicador / organização", text: $model.searchAuthor)
+                TextField("Publisher / organization", text: $model.searchAuthor)
                     .textFieldStyle(.roundedBorder).onSubmit { model.searchHub() }
-                Picker("Formato", selection: $model.searchFormat) {
-                    Text("Todos").tag("")
+                Picker("Format", selection: $model.searchFormat) {
+                    Text("All").tag("")
                     Text("MLX").tag("mlx")
                     Text("GGUF").tag("gguf")
                 }.frame(maxWidth: 180)
-                Picker("Ordenar", selection: $model.searchSort) {
+                Picker("Sort", selection: $model.searchSort) {
                     Text("Downloads").tag("downloads")
-                    Text("Curtidas").tag("likes")
-                    Text("Atualizados").tag("lastModified")
+                    Text("Likes").tag("likes")
+                    Text("Recently updated").tag("lastModified")
                 }.frame(maxWidth: 200)
             }
-            Text("Buscar aplica os filtros e retorna até 40 resultados. A quantização vem do nome e das tags. O laboratório vem do modelo base.")
+            Text("Search applies the filters and returns up to 40 results. Quantization is inferred from the name and tags; the lab comes from the base model.")
                 .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
-            if model.searching { ProgressView("Consultando Hugging Face…").controlSize(.small) }
+            if model.searching { ProgressView("Searching Hugging Face…").controlSize(.small) }
             if model.searchFinished && model.hubHits.isEmpty && !model.searching {
-                Label("Nenhum resultado. Tente outro nome, publicador ou formato.", luluSymbol: "magnifyingglass")
+                Label("No results. Try another name, publisher or format.", luluSymbol: "magnifyingglass")
                     .foregroundStyle(.secondary).padding(.vertical, 12)
             }
             if !model.hubHits.isEmpty {
-                Text("\(model.hubHits.count) resultados").font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 10) {
-                        ForEach(model.hubHits) { hit in
-                            HubResultView(hit: hit, selected: model.selectedHubHit?.id == hit.id && model.listedRepo == hit.id) {
-                                model.selectedHubHit = hit
-                                model.loadFiles(hit.id)
-                            }
+                Text("\(model.hubHits.count) results").font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
+                LazyVStack(alignment: .leading, spacing: 10) {
+                    ForEach(model.showAllHubResults ? model.hubHits : Array(model.hubHits.prefix(6))) { hit in
+                        HubResultView(hit: hit, selected: model.selectedHubHit?.id == hit.id && model.listedRepo == hit.id) {
+                            model.selectedHubHit = hit
+                            model.loadFiles(hit.id)
                         }
-                    }.padding(2)
-                }.frame(maxHeight: 420)
+                    }
+                    if model.hubHits.count > 6 {
+                        Button(model.showAllHubResults ? "Show fewer results" : "Show all \(model.hubHits.count) results") {
+                            model.showAllHubResults.toggle()
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }.padding(2)
             }
             if !model.listedRepo.isEmpty {
                 Divider().padding(.vertical, 8)
                 Label(model.listedRepo, luluSymbol: "folder").font(.headline).textSelection(.enabled)
                 if let hit = model.selectedHubHit { HubMetadataView(hit: hit) }
-                Text("Selecione os arquivos · quantização identificada pelo nome quando disponível.")
+                Text("Select files · quantization is inferred from the file name when available.")
                     .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
                 Text(Hub.destination(repo: model.listedRepo, files: model.listedFiles).path).font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary).lineLimit(1)
-                ScrollView {
-                    VStack(alignment: .leading, spacing: LuluTheme.Space.xs) {
+                LazyVStack(alignment: .leading, spacing: LuluTheme.Space.xs) {
                         ForEach($model.listedFiles) { $file in
                             Toggle(isOn: $file.selected) {
                                 HStack {
@@ -322,13 +329,11 @@ private struct ModelsPane: View {
                             }
                             .toggleStyle(.checkbox)
                         }
-                    }
                 }
-                .frame(maxHeight: 220)
                 HStack {
                     Text(selectedSummary).font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
                     Spacer()
-                    Button("Baixar selecionados") { model.enqueueSelected() }
+                    Button("Download selected") { model.enqueueSelected() }
                         .buttonStyle(.borderedProminent)
                         .tint(LuluTheme.accent)
                         .disabled(!model.listedFiles.contains(where: \.selected))
@@ -349,7 +354,7 @@ private struct ModelsPane: View {
     private var selectedSummary: String {
         let chosen = model.listedFiles.filter(\.selected)
         let bytes = chosen.reduce(Int64(0)) { $0 + max($1.size, 0) }
-        return "\(chosen.count) arquivos · \(Format.bytes(UInt64(bytes)))"
+        return "\(chosen.count) files · \(Format.bytes(UInt64(bytes)))"
     }
 
     private func jobRow(_ job: DownloadJob) -> some View {
@@ -369,12 +374,12 @@ private struct ModelsPane: View {
                 }
                 Spacer()
                 if job.state == .running || job.state == .queued {
-                    Button("Pausar") { model.pauseDownload(job.id) }
+                    Button("Pause") { model.pauseDownload(job.id) }
                 }
                 if job.state == .paused || job.state == .failed {
-                    Button("Continuar") { model.resumeDownload(job.id) }
+                    Button("Resume") { model.resumeDownload(job.id) }
                 }
-                Button("Remover") { model.removeDownload(job.id) }
+                Button("Remove") { model.removeDownload(job.id) }
             }
             if let error = job.error, !error.isEmpty {
                 Text(error).font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
@@ -387,11 +392,11 @@ private struct ModelsPane: View {
     @ViewBuilder
     private func jobStatus(_ state: DownloadState) -> some View {
         switch state {
-        case .queued: LuluStatusBadge("Na fila", tone: .neutral)
-        case .running: LuluStatusBadge("Baixando", tone: .info)
-        case .paused: LuluStatusBadge("Pausado", tone: .warning)
-        case .failed: LuluStatusBadge("Falha", tone: .danger)
-        case .done: LuluStatusBadge("Concluído", tone: .success)
+        case .queued: LuluStatusBadge("Queued", tone: .neutral)
+        case .running: LuluStatusBadge("Downloading", tone: .info)
+        case .paused: LuluStatusBadge("Paused", tone: .warning)
+        case .failed: LuluStatusBadge("Failed", tone: .danger)
+        case .done: LuluStatusBadge("Completed", tone: .success)
         }
     }
 
@@ -403,12 +408,12 @@ private struct ModelsPane: View {
     private var libraryCard: some View {
         VStack(alignment: .leading, spacing: LuluTheme.Space.sm) {
             HStack {
-                LuluSectionHeader("Biblioteca local", symbol: "externaldrive")
+                LuluSectionHeader("Local library", symbol: "externaldrive")
                 Spacer()
-                Button("Atualizar") { Task { await model.rescanModels() } }
+                Button("Refresh") { Task { await model.rescanModels() } }
             }
             if model.models.isEmpty {
-                Label("Adicione um modelo em ~/models/mlx ou ~/models/gguf, ou baixe um abaixo.", luluSymbol: "folder")
+                Label("Add a model to ~/models/mlx or ~/models/gguf, or download one below.", luluSymbol: "folder")
                     .font(LuluTheme.TypeStyle.body).foregroundStyle(.secondary)
             }
             ForEach(model.models) { item in
@@ -419,7 +424,7 @@ private struct ModelsPane: View {
                             .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                     Spacer()
-                    Button("Apagar", role: .destructive) { model.deleteModel(item.id) }
+                    Button("Delete", role: .destructive) { model.deleteModel(item.id) }
                 }
             }
         }
@@ -435,13 +440,13 @@ private struct ServerPane: View {
     var body: some View {
         VStack(alignment: .leading, spacing: LuluTheme.Space.md) {
             HStack {
-                LuluPageHeader("Servidor", symbol: "server.rack")
+                LuluPageHeader("Server", symbol: "server.rack")
                 Spacer()
                 LuluStatusBadge(phaseLabel, tone: phaseTone)
             }
             VStack(alignment: .leading, spacing: LuluTheme.Space.lg) {
-                Picker("Modelo", selection: $model.selectedModelID) {
-                    if model.models.isEmpty { Text("Nenhum modelo").tag("") }
+                Picker("Model", selection: $model.selectedModelID) {
+                    if model.models.isEmpty { Text("No model").tag("") }
                     ForEach(model.models) { item in
                         Text("\(item.name) · \(item.engineID) · \(Format.bytes(item.sizeBytes))").tag(item.id)
                     }
@@ -451,39 +456,39 @@ private struct ServerPane: View {
 
                 VStack(alignment: .leading, spacing: LuluTheme.Space.sm) {
                     HStack {
-                        Text("Contexto")
+                        Text("Context")
                         Spacer()
                         Text("\(Format.tokens(model.contextLength)) tokens")
                             .font(LuluTheme.TypeStyle.caption.monospacedDigit()).foregroundStyle(.secondary)
                     }
-                    Picker("Contexto", selection: $model.contextLength) {
+                    Picker("Context", selection: $model.contextLength) {
                         ForEach(model.supportedContextOptions, id: \.self) { value in
                             Text(contextOption(value)).tag(value)
                         }
                     }
                     .labelsHidden()
-                    .accessibilityLabel("Contexto")
+                    .accessibilityLabel("Context")
                     .pickerStyle(.menu)
                     .disabled(serverActive)
                     .onChange(of: model.contextLength) { _, _ in model.persist() }
                     HStack(spacing: LuluTheme.Space.md) {
                         LuluGlyph("memorychip").foregroundStyle(LuluTheme.accent)
                         VStack(alignment: .leading, spacing: LuluTheme.Space.xs) {
-                            Text("Máximo do modelo").font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
-                            Text(model.selectedContextLimit.map { Format.tokens($0) + " tokens" } ?? "Não informado nos arquivos locais")
+                            Text("Model maximum").font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
+                            Text(model.selectedContextLimit.map { Format.tokens($0) + " tokens" } ?? "Not provided in local files")
                                 .font(LuluTheme.TypeStyle.section).monospacedDigit()
                         }
                         Spacer()
                         if let maximum = model.selectedContextLimit {
-                            LuluStatusBadge(model.contextLength > maximum ? "Acima do limite" : "Dentro do limite",
+                            LuluStatusBadge(model.contextLength > maximum ? "Above limit" : "Within limit",
                                             tone: model.contextLength > maximum ? .warning : .success)
                         }
                     }
                     .padding(LuluTheme.Space.md)
                     .background(LuluTheme.subtle, in: RoundedRectangle(cornerRadius: LuluTheme.Radius.control))
                     Text(model.selectedContextLimit == nil
-                         ? "Sem metadados de contexto, o Lulu não consegue validar o máximo deste modelo."
-                         : "Limite lido dos metadados locais. O menu oferece apenas valores suportados pelo modelo.")
+                         ? "Without context metadata, Lulu cannot validate this model’s maximum."
+                         : "The limit comes from local metadata. The menu offers values within the model limit.")
                         .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
 
                 }
@@ -491,17 +496,17 @@ private struct ServerPane: View {
                 contextMemory
 
                 HStack {
-                    Text("Porta")
-                    TextField("Porta", value: $model.port, format: .number.grouping(.never))
+                    Text("Port")
+                    TextField("Port", value: $model.port, format: .number.grouping(.never))
                         .frame(width: 74)
                         .disabled(serverActive)
                         .onChange(of: model.port) { _, _ in model.persist() }
                     Spacer()
                     if serverActive {
-                        Button("Parar servidor", luluSymbol: "stop.fill") { model.stopServer() }
+                        Button("Stop server", luluSymbol: "stop.fill") { model.stopServer() }
                             .buttonStyle(.bordered)
                     } else {
-                        Button("Iniciar servidor", luluSymbol: "play.fill") { model.startServer() }
+                        Button("Start server", luluSymbol: "play.fill") { model.startServer() }
                             .buttonStyle(.borderedProminent)
                             .disabled(model.models.isEmpty)
                     }
@@ -516,7 +521,7 @@ private struct ServerPane: View {
                     .font(LuluTheme.TypeStyle.body.monospaced()).textSelection(.enabled)
                 Spacer()
                 if serverActive {
-                    Button(model.copied ? "Copiado" : "Copiar", luluSymbol: model.copied ? "checkmark" : "doc.on.doc") {
+                    Button(model.copied ? "Copied" : "Copy", luluSymbol: model.copied ? "checkmark" : "doc.on.doc") {
                         model.copyEndpoint()
                     }
                 }
@@ -527,10 +532,10 @@ private struct ServerPane: View {
             ClientRack(model: model)
 
             if !serverActive && model.models.isEmpty {
-                Button("Escolher um modelo", luluSymbol: "square.stack.3d.up") { model.pane = .models }
+                Button("Choose a model", luluSymbol: "square.stack.3d.up") { model.pane = .models }
             }
-            DisclosureGroup("Logs do servidor") {
-                logBox(model.logText, empty: "O log do servidor aparece aqui.")
+            DisclosureGroup("Server logs") {
+                logBox(model.logText, empty: "Server logs appear here.")
             }
         }
     }
@@ -552,15 +557,15 @@ private struct ServerPane: View {
 
     private var contextMemory: some View {
         VStack(alignment: .leading, spacing: LuluTheme.Space.md) {
-            LuluSectionHeader("Memória para este contexto", symbol: "memorychip")
+            LuluSectionHeader("Memory for this context", symbol: "memorychip")
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: LuluTheme.Space.md)], spacing: LuluTheme.Space.md) {
-                LuluMetric("Pesos · tamanho em disco", value: selectedModel.map { Format.bytes($0.sizeBytes) } ?? "—", symbol: "cube")
-                LuluMetric("KV cache estimado", value: kvEstimate.map(Format.bytes) ?? "—", symbol: "memorychip")
-                LuluMetric("Pesos + KV · estimativa", value: subtotalEstimate, symbol: "layers")
+                LuluMetric("Weights · disk size", value: selectedModel.map { Format.bytes($0.sizeBytes) } ?? "—", symbol: "cube")
+                LuluMetric("Estimated KV cache", value: kvEstimate.map(Format.bytes) ?? "—", symbol: "memorychip")
+                LuluMetric("Weights + KV · estimate", value: subtotalEstimate, symbol: "layers")
             }
             Text(kvEstimate == nil
-                 ? "Metadados de KV indisponíveis para este modelo. O consumo real aparece em Desempenho após iniciar o servidor."
-                 : "O subtotal usa o tamanho dos pesos em disco e o KV estimado. Buffers, projetor multimodal e outras alocações do motor podem aumentar o consumo. O uso real aparece em Desempenho.")
+                 ? "KV metadata is unavailable for this model. Actual usage appears in Performance after starting the server."
+                 : "The subtotal combines disk weights and estimated KV cache. Buffers, multimodal projectors and engine allocations may increase usage. See Performance for actual usage.")
                 .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
         }
     }
@@ -584,10 +589,10 @@ private struct ServerPane: View {
 
     private var phaseLabel: String {
         switch model.phase {
-        case .stopped: return "Parado"
-        case .starting: return "Iniciando"
-        case .ready: return "Disponível"
-        case .failed: return "Falha"
+        case .stopped: return "Stopped"
+        case .starting: return "Starting"
+        case .ready: return "Available"
+        case .failed: return "Failed"
         }
     }
 }
@@ -598,56 +603,56 @@ private struct SpeedPane: View {
     var body: some View {
         let memory = model.memory
         VStack(alignment: .leading, spacing: LuluTheme.Space.lg) {
-            LuluPageHeader("Desempenho", symbol: "gauge.with.dots.needle.67percent")
+            LuluPageHeader("Performance", symbol: "gauge.with.dots.needle.67percent")
             VStack(alignment: .leading, spacing: LuluTheme.Space.xs) {
                 if model.phase == .ready {
                     Text(Format.rate(memory.predictRate)).font(LuluTheme.TypeStyle.metric)
-                    Text("tokens por segundo na geração").font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
+                    Text("tokens per second during generation").font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
                 } else {
                     Text(memory.total == 0 ? "—" : Format.bytes(memory.available)).font(LuluTheme.TypeStyle.metric)
-                    Text("memória disponível").font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
+                    Text("available memory").font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
                 }
             }.accessibilityElement(children: .combine)
 
             VStack(alignment: .leading, spacing: LuluTheme.Space.md) {
-                LuluSectionHeader("Processo do servidor", symbol: "server.rack")
+                LuluSectionHeader("Server process", symbol: "server.rack")
                 LazyVGrid(columns: columns, alignment: .leading, spacing: LuluTheme.Space.lg) {
                     tile("Prompt", Format.rate(memory.promptRate) + " tok/s")
-                    tile("Processo", Format.bytes(memory.footprint))
-                    tile("Pesos", Format.bytes(memory.weights))
-                    tile("KV reservado", Format.bytes(memory.kvReserved))
-                    tile("KV em uso", Format.bytes(memory.kvUsed))
-                    tile("Contexto", contextLine(memory))
+                    tile("Process", Format.bytes(memory.footprint))
+                    tile("Weights", Format.bytes(memory.weights))
+                    tile("KV reserved", Format.bytes(memory.kvReserved))
+                    tile("KV used", Format.bytes(memory.kvUsed))
+                    tile("Context", contextLine(memory))
                 }
                 Text(memory.kvSummary).font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
             }
             .padding(LuluTheme.Space.lg).luluCard()
 
             VStack(alignment: .leading, spacing: LuluTheme.Space.md) {
-                LuluSectionHeader("Memória do Mac", symbol: "memorychip")
+                LuluSectionHeader("Mac memory", symbol: "memorychip")
                 LazyVGrid(columns: columns, alignment: .leading, spacing: LuluTheme.Space.lg) {
                     tile("Total", Format.bytes(memory.total))
-                    tile("Disponível", Format.bytes(memory.available))
+                    tile("Available", Format.bytes(memory.available))
                     tile("Wired", Format.bytes(memory.wired))
-                    tile("Comprimida", Format.bytes(memory.compressed))
-                    tile("Ativa", Format.bytes(memory.active))
-                    tile("Liberável", Format.bytes(memory.purgeable))
+                    tile("Compressed", Format.bytes(memory.compressed))
+                    tile("Active", Format.bytes(memory.active))
+                    tile("Purgeable", Format.bytes(memory.purgeable))
                 }
                 Meter(footprint: fraction(memory.footprint, memory.total), other: fraction(otherUsed(memory), memory.total))
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 135), alignment: .leading)], alignment: .leading, spacing: LuluTheme.Space.md) {
-                    memoryLegend("Servidor", value: memory.footprint, color: Meter.serverColor)
-                    memoryLegend("Outros processos", value: otherUsed(memory), color: Meter.otherColor)
-                    memoryLegend("Disponível", value: memory.available, color: Meter.availableColor)
+                    memoryLegend("Server", value: memory.footprint, color: Meter.serverColor)
+                    memoryLegend("Other processes", value: otherUsed(memory), color: Meter.otherColor)
+                    memoryLegend("Available", value: memory.available, color: Meter.availableColor)
                 }
                 .font(LuluTheme.TypeStyle.caption)
                 HStack {
                     Spacer(minLength: 0)
-                    Button("Purge de memória", luluSymbol: "sparkles") { model.confirmPurge = true }
+                    Button("Purge memory", luluSymbol: "sparkles") { model.confirmPurge = true }
                 }
             }
             .padding(LuluTheme.Space.lg).luluCard()
 
-            Text("O llama.cpp reserva o cache KV ao iniciar. No MLX, o valor em uso estima quanto o processo cresceu após carregar os pesos.")
+            Text("llama.cpp reserves KV cache at startup. For MLX, used KV estimates process growth after loading weights.")
                 .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
         }
     }

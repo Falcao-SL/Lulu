@@ -58,13 +58,13 @@ struct HubHit: Identifiable, Equatable {
     var parameters: Int64 = 0
 
     var publisher: String { author.isEmpty ? String(id.split(separator: "/").first ?? "") : author }
-    var laboratory: String { baseModel.split(separator: "/").first.map(String.init) ?? "Não informado" }
-    var quantization: String { ModelMetadata.quantization(in: id + " " + tags.joined(separator: " ")) ?? "Não informada" }
+    var laboratory: String { baseModel.split(separator: "/").first.map(String.init) ?? "Not provided" }
+    var quantization: String { ModelMetadata.quantization(in: id + " " + tags.joined(separator: " ")) ?? "Not provided" }
     var format: String {
         let value = (id + " " + library + " " + tags.joined(separator: " ")).lowercased()
         if value.contains("gguf") { return "GGUF" }
         if value.contains("mlx") { return "MLX" }
-        return library.isEmpty ? "Formato não informado" : library
+        return library.isEmpty ? "Format not provided" : library
     }
 }
 
@@ -258,10 +258,10 @@ enum Hub {
         let (data, response) = try await URLSession.shared.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         if status == 401 || status == 403 {
-            throw HubError(message: "O Hugging Face recusou o acesso. Modelos fechados pedem um token.")
+            throw HubError(message: "Hugging Face denied access. Gated models require a token.")
         }
         if status >= 400 {
-            throw HubError(message: "O Hugging Face respondeu HTTP \(status).")
+            throw HubError(message: "Hugging Face returned HTTP \(status).")
         }
         return data
     }
@@ -382,17 +382,17 @@ final class HFTransfers: NSObject, URLSessionDataDelegate, URLSessionTaskDelegat
             return
         }
         if http.statusCode == 401 || http.statusCode == 403 {
-            fail("O Hugging Face recusou o arquivo. Se o modelo é fechado, guarde a chave.")
+            fail("Hugging Face denied access to the file. Save a token for gated models.")
             completionHandler(.cancel)
             return
         }
         if http.statusCode == 404 {
-            fail("Arquivo não encontrado no repositório.")
+            fail("File not found in the repository.")
             completionHandler(.cancel)
             return
         }
         if http.statusCode != 200 && http.statusCode != 206 {
-            fail("HTTP \(http.statusCode) ao baixar \(relativePath).")
+            fail("HTTP \(http.statusCode) while downloading \(relativePath).")
             completionHandler(.cancel)
             return
         }
@@ -441,7 +441,7 @@ final class HFTransfers: NSObject, URLSessionDataDelegate, URLSessionTaskDelegat
             return
         }
         guard bytes > 0, total == 0 || bytes >= total else {
-            emit(.failed(job, "O arquivo \(path) chegou incompleto."))
+            emit(.failed(job, "File \(path) was downloaded incompletely."))
             return
         }
         guard let incomplete, let finalURL else { return }

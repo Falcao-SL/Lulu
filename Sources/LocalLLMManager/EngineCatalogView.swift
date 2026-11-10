@@ -30,16 +30,16 @@ struct EngineOption: Identifiable {
     }
 
     static let external: [EngineOption] = [
-        .init(id: "nativ", name: "Nativ", icon: "macwindow", purpose: "App nativo para modelos MLX neste Mac, com servidor compatível com a API da OpenAI.", requirement: "Apple Silicon · macOS 26 ou posterior · Homebrew", url: "https://github.com/Blaizzy/nativ/releases/latest", command: nil),
-        .init(id: "ollama", name: "Ollama", icon: "shippingbox", purpose: "Biblioteca própria de modelos locais e API para aplicativos.", requirement: "CLI via Homebrew ou aplicativo oficial", url: "https://ollama.com/download/mac", command: nil),
-        .init(id: "lmstudio", name: "LM Studio", icon: "desktopcomputer", purpose: "Interface para conversar, explorar modelos e disponibilizar uma API local.", requirement: "Aplicativo via Homebrew ou download oficial", url: "https://lmstudio.ai/download", command: nil),
-        .init(id: "jan", name: "Jan", icon: "bubble.left.and.bubble.right", purpose: "Chat local e servidor compatível com a API da OpenAI.", requirement: "Aplicativo via Homebrew", url: "https://jan.ai/", command: nil),
-        .init(id: "llama", name: "Llama", icon: "menubar.rectangle", purpose: "App de barra de menus do ggml, em cima do llama.cpp.", requirement: "Apple Silicon · macOS 15 ou posterior · Homebrew", url: "https://github.com/ggml-org/Llama-macOS", command: nil),
-        .init(id: "gpt4all", name: "GPT4All", icon: "circle.grid.2x2", purpose: "App da Nomic para conversar com modelos locais.", requirement: "O Homebrew entrega o instalador · macOS 12 ou posterior", url: "https://www.nomic.ai/gpt4all/", command: nil),
-        .init(id: "vllm", name: "vLLM · Metal", icon: "bolt.horizontal", purpose: "Atende várias requisições ao mesmo tempo com o plugin Metal do vLLM.", requirement: "Apple Silicon · macOS 15 ou posterior · Homebrew", url: "https://docs.vllm.ai/projects/vllm-metal/en/latest/installation/", command: "brew tap vllm-project/vllm-metal https://github.com/vllm-project/vllm-metal\nbrew install vllm-project/vllm-metal/vllm-metal"),
-        .init(id: "koboldcpp", name: "KoboldCpp", icon: "book", purpose: "Um programa para GGUF, com interface e API local.", requirement: "Binário oficial para Apple Silicon", url: "https://github.com/LostRuins/koboldcpp/releases/latest", command: nil),
-        .init(id: "strata", name: "Strata", icon: "square.3.layers.3d", purpose: "Inferência de modelos MoE com uso de memória e SSD. Verifique os modelos compatíveis.", requirement: "Apple Silicon · macOS 15 ou posterior · requisitos variam por modelo", url: "https://github.com/Niko1221/Strata/releases/latest", command: nil),
-        .init(id: "colibri", name: "Colibri", icon: "bird", purpose: "Modelos MoE com especialistas distribuídos entre GPU, RAM e disco.", requirement: "Release macOS · Python 3 · configuração por modelo", url: "https://github.com/JustVugg/colibri/releases/latest", command: nil),
+        .init(id: "nativ", name: "Nativ", icon: "macwindow", purpose: "Native MLX app for this Mac with an OpenAI-compatible server.", requirement: "Apple Silicon · macOS 26 or later · Homebrew", url: "https://github.com/Blaizzy/nativ/releases/latest", command: nil),
+        .init(id: "ollama", name: "Ollama", icon: "shippingbox", purpose: "Local model library and API for applications.", requirement: "CLI via Homebrew or official app", url: "https://ollama.com/download/mac", command: nil),
+        .init(id: "lmstudio", name: "LM Studio", icon: "desktopcomputer", purpose: "Chat, explore models and serve a local API.", requirement: "App via Homebrew or official download", url: "https://lmstudio.ai/download", command: nil),
+        .init(id: "jan", name: "Jan", icon: "bubble.left.and.bubble.right", purpose: "Local chat and an OpenAI-compatible server.", requirement: "App via Homebrew", url: "https://jan.ai/", command: nil),
+        .init(id: "llama", name: "Llama", icon: "menubar.rectangle", purpose: "ggml menu bar app powered by llama.cpp.", requirement: "Apple Silicon · macOS 15 or later · Homebrew", url: "https://github.com/ggml-org/Llama-macOS", command: nil),
+        .init(id: "gpt4all", name: "GPT4All", icon: "circle.grid.2x2", purpose: "Nomic app for chatting with local models.", requirement: "Homebrew provides the installer · macOS 12 or later", url: "https://www.nomic.ai/gpt4all/", command: nil),
+        .init(id: "vllm", name: "vLLM · Metal", icon: "bolt.horizontal", purpose: "Serve concurrent requests using the vLLM Metal plugin.", requirement: "Apple Silicon · macOS 15 or later · Homebrew", url: "https://docs.vllm.ai/projects/vllm-metal/en/latest/installation/", command: "brew tap vllm-project/vllm-metal https://github.com/vllm-project/vllm-metal\nbrew install vllm-project/vllm-metal/vllm-metal"),
+        .init(id: "koboldcpp", name: "KoboldCpp", icon: "book", purpose: "GGUF application with a local interface and API.", requirement: "Official Apple Silicon binary", url: "https://github.com/LostRuins/koboldcpp/releases/latest", command: nil),
+        .init(id: "strata", name: "Strata", icon: "square.3.layers.3d", purpose: "MoE inference using memory and SSD. Check model compatibility.", requirement: "Apple Silicon · macOS 15 or later · requirements vary by model", url: "https://github.com/Niko1221/Strata/releases/latest", command: nil),
+        .init(id: "colibri", name: "Colibri", icon: "bird", purpose: "MoE models with experts distributed across GPU, RAM and disk.", requirement: "Release macOS · Python 3 · per-model configuration", url: "https://github.com/JustVugg/colibri/releases/latest", command: nil),
     ]
 }
 
@@ -48,8 +48,8 @@ struct AdditionalEnginesView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: LuluTheme.Space.md) {
-            LuluSectionHeader("Outros motores", symbol: "square.stack.3d.up")
-            Text("Cada aplicativo gerencia seus próprios modelos e servidor.")
+            LuluSectionHeader("Other engines", symbol: "square.stack.3d.up")
+            Text("Each application manages its own models and server.")
                 .font(LuluTheme.TypeStyle.body)
                 .foregroundStyle(.secondary)
             ForEach(EngineOption.external) { item in
@@ -110,42 +110,42 @@ private struct EngineOptionCard: View {
         } else if model.busyEngineID == item.id {
             HStack(spacing: LuluTheme.Space.xs) {
                 ProgressView().controlSize(.small).accessibilityHidden(true)
-                Text("Instalando…").font(LuluTheme.TypeStyle.caption)
+                Text("Installing…").font(LuluTheme.TypeStyle.caption)
             }
-            .accessibilityLabel("Instalando \(item.name)")
+            .accessibilityLabel("Installing \(item.name)")
         } else if item.installed {
-            LuluStatusBadge("Instalado", tone: .success)
+            LuluStatusBadge("Installed", tone: .success)
         } else {
             Button {
                 model.installAdditionalEngine(item.id)
             } label: {
-                Label("Instalar", luluSymbol: "arrow.down.circle")
+                Label("Install", luluSymbol: "arrow.down.circle")
             }
             .buttonStyle(.bordered)
             .tint(LuluTheme.accent)
             .disabled(model.busyEngineID != nil || !compatible)
-            .accessibilityLabel("Instalar \(item.name) via Homebrew")
-            .help(compatible ? "Instalar via Homebrew" : item.requirement)
+            .accessibilityLabel("Install \(item.name) via Homebrew")
+            .help(compatible ? "Install via Homebrew" : item.requirement)
         }
     }
 
     private var officialLink: some View {
         Link(destination: URL(string: item.url)!) {
-            Label(item.command == nil ? "Download oficial" : "Guia oficial", luluSymbol: "arrow.up.right")
+            Label(item.command == nil ? "Official download" : "Official guide", luluSymbol: "arrow.up.right")
         }
         .font(LuluTheme.TypeStyle.caption)
         .foregroundStyle(LuluTheme.accent)
         .fixedSize(horizontal: true, vertical: false)
-        .accessibilityHint("Abre a página oficial de \(item.name)")
+        .accessibilityHint("Opens the official page for \(item.name)")
     }
 
     private func terminalInstructions(_ command: String) -> some View {
-        DisclosureGroup("Instalar pelo Terminal") {
+        DisclosureGroup("Install with Terminal") {
             VStack(alignment: .leading, spacing: LuluTheme.Space.sm) {
                 Text(command)
                     .font(LuluTheme.TypeStyle.caption.monospaced())
                     .textSelection(.enabled)
-                Button(model.copiedEngineCommand == item.id ? "Comando copiado" : "Copiar comando") {
+                Button(model.copiedEngineCommand == item.id ? "Command copied" : "Copy command") {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(command, forType: .string)
                     model.copiedEngineCommand = item.id

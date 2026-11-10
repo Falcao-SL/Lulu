@@ -16,14 +16,14 @@ struct OverviewPane: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Space.xl) {
-                LuluPageHeader("Visão geral", symbol: "square.grid.2x2")
+                LuluPageHeader("Overview", symbol: "square.grid.2x2")
                 session
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 155), spacing: Space.md)], spacing: Space.md) {
-                    LuluMetric("Memória disponível", value: model.memory.total == 0 ? "—" : Format.bytes(model.memory.available), symbol: "memorychip")
-                    LuluMetric("Geração · tok/s", value: model.phase == .ready ? Format.rate(model.memory.predictRate) : "—", symbol: "bolt")
-                        .help("Taxa de geração informada pelo motor. O traço indica que a métrica está indisponível.")
-                    LuluMetric("Modelos locais", value: String(model.models.count), symbol: "square.stack.3d.up")
-                    LuluMetric("Downloads ativos", value: String(downloads), symbol: "arrow.down.circle")
+                    LuluMetric("Available memory", value: model.memory.total == 0 ? "—" : Format.bytes(model.memory.available), symbol: "memorychip")
+                    LuluMetric("Generation · tok/s", value: model.phase == .ready ? Format.rate(model.memory.predictRate) : "—", symbol: "bolt")
+                        .help("Generation rate reported by the engine. A dash means the metric is unavailable.")
+                    LuluMetric("Local models", value: String(model.models.count), symbol: "square.stack.3d.up")
+                    LuluMetric("Active downloads", value: String(downloads), symbol: "arrow.down.circle")
                 }
                 memory
                 shortcuts
@@ -35,10 +35,10 @@ struct OverviewPane: View {
 
     @ViewBuilder private var phaseBadge: some View {
         switch model.phase {
-        case .ready: LuluStatusBadge("Disponível", tone: .success)
-        case .starting: LuluStatusBadge("Carregando", tone: .info)
-        case .stopped: LuluStatusBadge("Parado", tone: .neutral)
-        case .failed: LuluStatusBadge("Falha", tone: .danger)
+        case .ready: LuluStatusBadge("Available", tone: .success)
+        case .starting: LuluStatusBadge("Starting", tone: .info)
+        case .stopped: LuluStatusBadge("Stopped", tone: .neutral)
+        case .failed: LuluStatusBadge("Failed", tone: .danger)
         }
     }
 
@@ -47,7 +47,7 @@ struct OverviewPane: View {
             LuluEmblem(side: 68)
             VStack(alignment: .leading, spacing: Space.sm) {
                 HStack(spacing: Space.sm) {
-                    Text("Servidor local").font(LuluTheme.TypeStyle.section)
+                    Text("Local server").font(LuluTheme.TypeStyle.section)
                     phaseBadge
                 }
                 Text(sessionDetail).font(LuluTheme.TypeStyle.body).foregroundStyle(.secondary)
@@ -57,7 +57,7 @@ struct OverviewPane: View {
             Button {
                 model.pane = !active && model.models.isEmpty ? .models : .server
             } label: {
-                Text(active ? "Gerenciar servidor" : model.models.isEmpty ? "Escolher modelo" : "Configurar servidor")
+                Text(active ? "Manage server" : model.models.isEmpty ? "Choose model" : "Configure server")
             }
             .buttonStyle(.borderedProminent)
         }
@@ -67,34 +67,34 @@ struct OverviewPane: View {
 
     private var sessionDetail: String {
         if active, let running = model.runningModel { return running.name }
-        if model.phase == .failed { return "Consulte o log do servidor para identificar a falha." }
-        if model.models.isEmpty { return "Adicione um modelo à biblioteca para começar." }
-        return "Escolha um modelo da biblioteca e inicie o servidor."
+        if model.phase == .failed { return "Check the server log to identify the error." }
+        if model.models.isEmpty { return "Add a model to your library to get started." }
+        return "Choose a model from your library and start the server."
     }
 
     private var memory: some View {
         VStack(alignment: .leading, spacing: Space.md) {
             HStack {
-                LuluSectionHeader("Memória unificada", symbol: "memorychip")
+                LuluSectionHeader("Unified memory", symbol: "memorychip")
                 Spacer()
-                Button("Ver detalhes") { model.pane = .speed }.buttonStyle(.bordered)
+                Button("View details") { model.pane = .speed }.buttonStyle(.bordered)
             }
             ProgressView(value: memoryFraction)
-                .accessibilityLabel("Memória usada")
-                .accessibilityValue("\(Int(memoryFraction * 100)) por cento")
+                .accessibilityLabel("Used memory")
+                .accessibilityValue("\(Int(memoryFraction * 100)) percent")
             HStack {
-                Text(model.memory.total == 0 ? "Lendo memória do Mac…" : "\(Int(memoryFraction * 100))% em uso · \(Format.bytes(model.memory.total)) no Mac")
+                Text(model.memory.total == 0 ? "Reading Mac memory…" : "\(Int(memoryFraction * 100))% used · \(Format.bytes(model.memory.total)) on this Mac")
                 Spacer()
-                Text("Servidor: \(Format.bytes(model.memory.footprint))")
+                Text("Server: \(Format.bytes(model.memory.footprint))")
             }
             .font(LuluTheme.TypeStyle.caption).monospacedDigit().foregroundStyle(.secondary)
             Divider()
             HStack {
-                Text("O purge encerra o servidor e libera a memória inativa.")
+                Text("Purge stops the server and requests release of inactive memory.")
                     .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
                 Spacer()
                 Button { model.confirmPurge = true } label: {
-                    Label("Purge de memória", luluSymbol: "memorychip")
+                    Label("Purge memory", luluSymbol: "memorychip")
                 }.buttonStyle(.bordered)
             }
         }
@@ -104,14 +104,14 @@ struct OverviewPane: View {
 
     private var shortcuts: some View {
         VStack(alignment: .leading, spacing: Space.lg) {
-            LuluSectionHeader("Acesso rápido", symbol: "arrow.up.forward.square")
-            shortcut("cpu", "Motores", "\(installed) de \(model.engines.count) motores integrados instalados", .engines)
+            LuluSectionHeader("Quick access", symbol: "arrow.up.forward.square")
+            shortcut("cpu", "Engines", "\(installed) of \(model.engines.count) built-in engines installed", .engines)
             Divider()
-            shortcut("square.stack.3d.up", "Biblioteca e downloads", "Buscar modelos e gerenciar arquivos locais", .models)
+            shortcut("square.stack.3d.up", "Library and downloads", "Search models and manage local files", .models)
             Divider()
-            shortcut("network", "Conexão com a API", active ? "http://127.0.0.1:\(model.port)/v1" : "Configurar modelo, contexto e porta", .server)
+            shortcut("network", "API connection", active ? "http://127.0.0.1:\(model.port)/v1" : "Configure model, context and port", .server)
             if model.phase == .ready {
-                Button(model.copied ? "Endpoint copiado" : "Copiar endpoint da API") { model.copyEndpoint() }
+                Button(model.copied ? "Endpoint copied" : "Copy API endpoint") { model.copyEndpoint() }
             }
             ClientRack(model: model)
         }

@@ -19,12 +19,12 @@ enum OpenCodeClient {
         if FileManager.default.fileExists(atPath: target.path) {
             let data = try Data(contentsOf: target)
             guard let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                throw Failure(message: "Não reescrevi \(target.lastPathComponent): o arquivo não é JSON puro. Sem comentários, o Lulu consegue configurar o OpenCode.")
+                throw Failure(message: "Could not update \(target.lastPathComponent): the file is not valid JSON. Remove comments so Lulu can configure OpenCode.")
             }
             root = parsed
         }
         guard root["providers"] == nil || root["providers"] is [String: Any] else {
-            throw Failure(message: "Não reescrevi o OpenCode: a chave providers não é um objeto.")
+            throw Failure(message: "Could not update OpenCode: providers is not an object.")
         }
         if root["$schema"] == nil {
             root["$schema"] = "https://opencode.ai/config.json"

@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 private enum GuideAppearance: String, CaseIterable {
-    case system = "Sistema", light = "Claro", dark = "Escuro"
+    case system = "System", light = "Light", dark = "Dark"
 
     var scheme: ColorScheme? {
         switch self {
@@ -27,12 +27,12 @@ struct LuluDesignGuide: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Picker("Seção", selection: $settings.components) {
-                    Text("Fundamentos").tag(false)
-                    Text("Componentes").tag(true)
+                Picker("Section", selection: $settings.components) {
+                    Text("Foundations").tag(false)
+                    Text("Components").tag(true)
                 }.labelsHidden().pickerStyle(.segmented).frame(width: 230)
                 Spacer()
-                Picker("Aparência", selection: $settings.appearance) {
+                Picker("Appearance", selection: $settings.appearance) {
                     ForEach(GuideAppearance.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                 }.fixedSize()
             }
@@ -58,7 +58,7 @@ struct LuluDesignGuide: View {
             LuluEmblem(side: 80)
             VStack(alignment: .leading, spacing: Space.xs) {
                 Text("Lulu").font(.system(size: 40, weight: .semibold, design: .rounded))
-                Text("Sistema de design para macOS").font(LuluTheme.TypeStyle.body)
+                Text("Design system for macOS").font(LuluTheme.TypeStyle.body)
             }.foregroundStyle(LuluTheme.ink)
             Spacer()
             LuluSignature()
@@ -67,28 +67,28 @@ struct LuluDesignGuide: View {
         .background(LuluTheme.brandMint, in: RoundedRectangle(cornerRadius: LuluTheme.Radius.card))
 
         VStack(alignment: .leading, spacing: Space.md) {
-            LuluSectionHeader("Paleta de interface", symbol: "paintpalette")
+            LuluSectionHeader("Interface palette", symbol: "paintpalette")
             HStack(spacing: Space.sm) {
-                swatch("Ação", "accent", LuluTheme.accent)
-                swatch("Fundo", "canvas", LuluTheme.canvas)
-                swatch("Painel", "surface", LuluTheme.surface)
-                swatch("Seleção", "subtle", LuluTheme.subtle)
-                swatch("Contorno", "border", LuluTheme.border)
+                swatch("Action", "accent", LuluTheme.accent)
+                swatch("Background", "canvas", LuluTheme.canvas)
+                swatch("Surface", "surface", LuluTheme.surface)
+                swatch("Selection", "subtle", LuluTheme.subtle)
+                swatch("Border", "border", LuluTheme.border)
             }
         }
 
         VStack(alignment: .leading, spacing: Space.md) {
-            LuluSectionHeader("Tipografia", symbol: "textformat")
+            LuluSectionHeader("Typography", symbol: "textformat")
             VStack(spacing: Space.sm) {
-                specimen("Título de página", "Visão geral", LuluTheme.TypeStyle.page)
-                specimen("Título de seção", "Biblioteca local", LuluTheme.TypeStyle.section)
-                specimen("Corpo", "Escolha um modelo", LuluTheme.TypeStyle.body)
-                specimen("Legenda", "Memória disponível", LuluTheme.TypeStyle.caption)
-                specimen("Métrica", "12,4 GB", LuluTheme.TypeStyle.metric)
+                specimen("Page title", "Overview", LuluTheme.TypeStyle.page)
+                specimen("Section title", "Local library", LuluTheme.TypeStyle.section)
+                specimen("Body", "Choose a model", LuluTheme.TypeStyle.body)
+                specimen("Caption", "Available memory", LuluTheme.TypeStyle.caption)
+                specimen("Metric", "12,4 GB", LuluTheme.TypeStyle.metric)
             }.padding(Space.lg).luluCard()
         }
         VStack(alignment: .leading, spacing: Space.md) {
-            LuluSectionHeader("Espaçamento", symbol: "ruler")
+            LuluSectionHeader("Spacing", symbol: "ruler")
             HStack(alignment: .bottom, spacing: Space.xl) {
                 ForEach([Space.xs, Space.sm, Space.md, Space.lg, Space.xl, Space.xxl], id: \.self) { size in
                     VStack(alignment: .leading, spacing: Space.sm) {
@@ -120,33 +120,33 @@ struct LuluDesignGuide: View {
     }
 
     @ViewBuilder private var components: some View {
-        LuluPageHeader("Componentes", symbol: "square.grid.2x2")
+        LuluPageHeader("Components", symbol: "square.grid.2x2")
         VStack(alignment: .leading, spacing: Space.md) {
-            LuluSectionHeader("Indicadores", symbol: "gauge.with.dots.needle.67percent")
+            LuluSectionHeader("Indicators", symbol: "gauge.with.dots.needle.67percent")
             HStack(spacing: Space.md) {
-                LuluMetric("Memória disponível", value: "12,4 GB", symbol: "memorychip")
-                LuluMetric("Geração · tok/s", value: "34,8", symbol: "bolt")
-                LuluMetric("Modelos locais", value: "3", symbol: "square.stack.3d.up")
+                LuluMetric("Available memory", value: "12,4 GB", symbol: "memorychip")
+                LuluMetric("Generation · tok/s", value: "34,8", symbol: "bolt")
+                LuluMetric("Local models", value: "3", symbol: "square.stack.3d.up")
             }
         }
         VStack(alignment: .leading, spacing: Space.md) {
-            LuluSectionHeader("Estados", symbol: "circle.lefthalf.filled")
+            LuluSectionHeader("States", symbol: "circle.lefthalf.filled")
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 125), alignment: .leading)], alignment: .leading, spacing: Space.md) {
-                LuluStatusBadge("Parado", tone: .neutral)
-                LuluStatusBadge("Em andamento", tone: .info)
-                LuluStatusBadge("Disponível", tone: .success)
-                LuluStatusBadge("Atenção", tone: .warning)
-                LuluStatusBadge("Falha", tone: .danger)
+                LuluStatusBadge("Stopped", tone: .neutral)
+                LuluStatusBadge("In progress", tone: .info)
+                LuluStatusBadge("Available", tone: .success)
+                LuluStatusBadge("Warning", tone: .warning)
+                LuluStatusBadge("Failed", tone: .danger)
             }
         }.frame(maxWidth: .infinity, alignment: .leading).padding(Space.lg).luluCard()
         VStack(alignment: .leading, spacing: Space.md) {
-            LuluSectionHeader("Uso em SwiftUI", symbol: "chevron.left.forwardslash.chevron.right")
+            LuluSectionHeader("SwiftUI usage", symbol: "chevron.left.forwardslash.chevron.right")
             let snippet = #"LuluStatusBadge("Disponível", tone: .success)"#
             HStack {
                 Button { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(snippet, forType: .string) } label: {
-                    Label("Copiar exemplo", luluSymbol: "doc.on.doc")
+                    Label("Copy example", luluSymbol: "doc.on.doc")
                 }.buttonStyle(.borderedProminent)
-                Button(settings.showCode ? "Ocultar código" : "Mostrar código") { settings.showCode.toggle() }.buttonStyle(.bordered)
+                Button(settings.showCode ? "Hide code" : "Show code") { settings.showCode.toggle() }.buttonStyle(.bordered)
             }
             if settings.showCode {
                 Text(snippet).font(.body.monospaced()).textSelection(.enabled)
