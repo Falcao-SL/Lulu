@@ -24,6 +24,7 @@ trap 'rm -rf "${STAGE}"' EXIT
 cp -R "${APP}" "${STAGE}/"
 ln -s /Applications "${STAGE}/Applications"
 hdiutil create -volname "Lulu" -srcfolder "${STAGE}" -ov -format UDZO "${DMG}"
+cp "${DMG}" dist/Lulu-macos-arm64.dmg
 
 (
   cd dist

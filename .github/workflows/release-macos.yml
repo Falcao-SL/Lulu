@@ -57,4 +57,5 @@ jobs:
           files: |
             dist/Lulu-${{ steps.version.outputs.version }}-macos-arm64.zip
             dist/Lulu-${{ steps.version.outputs.version }}-macos-arm64.dmg
+            dist/Lulu-macos-arm64.dmg
             dist/SHA256SUMS
