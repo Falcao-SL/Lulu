@@ -38,16 +38,23 @@ func png(_ pixels: Int) throws -> Data {
     ) else {
         throw NSError(domain: "lulu", code: 1)
     }
-    context.setFillColor(CGColor(gray: 1, alpha: 1))
-    context.fill(CGRect(x: 0, y: 0, width: pixels, height: pixels))
     context.translateBy(x: 0, y: CGFloat(pixels))
     context.scaleBy(x: 1, y: -1)
-    let inset = CGFloat(pixels) * 0.11
+    let side = CGFloat(pixels)
+    let tile = CGRect(x: side * 0.06, y: side * 0.06, width: side * 0.88, height: side * 0.88)
+    context.saveGState()
+    context.addPath(CGPath(roundedRect: tile, cornerWidth: side * 0.20, cornerHeight: side * 0.20, transform: nil))
+    context.clip()
+    let colors = [CGColor(red: 0.70, green: 0.91, blue: 0.80, alpha: 1), CGColor(red: 0.22, green: 0.55, blue: 0.48, alpha: 1)]
+    let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: [0, 1])!
+    context.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: side, y: side), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+    context.restoreGState()
+    let inset = CGFloat(pixels) * 0.18
     let rect = CGRect(x: inset, y: inset, width: CGFloat(pixels) - inset * 2, height: CGFloat(pixels) - inset * 2)
-    context.setFillColor(CGColor(gray: 0, alpha: 1))
+    context.setFillColor(CGColor(red: 0.07, green: 0.20, blue: 0.16, alpha: 1))
     context.addPath(CatGeometry.head(in: rect))
     context.fillPath()
-    context.setStrokeColor(CGColor(gray: 0, alpha: 1))
+    context.setStrokeColor(CGColor(red: 0.07, green: 0.20, blue: 0.16, alpha: 1))
     context.setLineCap(.round)
     context.setLineWidth(CatGeometry.whiskerWidth(for: rect.width))
     for (start, end) in CatGeometry.whiskers(in: rect) {
@@ -55,13 +62,13 @@ func png(_ pixels: Int) throws -> Data {
         context.addLine(to: end)
         context.strokePath()
     }
-    context.setFillColor(CGColor(gray: 1, alpha: 1))
+    context.setFillColor(CGColor(red: 0.91, green: 0.98, blue: 0.96, alpha: 1))
     context.addPath(CatGeometry.innerEarLeft(in: rect))
     context.addPath(CatGeometry.innerEarRight(in: rect))
     context.fillPath()
     context.fillEllipse(in: CatGeometry.eyeLeft(in: rect))
     context.fillEllipse(in: CatGeometry.eyeRight(in: rect))
-    context.setFillColor(CGColor(gray: 0, alpha: 1))
+    context.setFillColor(CGColor(red: 0.07, green: 0.20, blue: 0.16, alpha: 1))
     context.fillEllipse(in: CatGeometry.pupilLeft(in: rect))
     context.fillEllipse(in: CatGeometry.pupilRight(in: rect))
     guard let image = context.makeImage() else { throw NSError(domain: "lulu", code: 2) }

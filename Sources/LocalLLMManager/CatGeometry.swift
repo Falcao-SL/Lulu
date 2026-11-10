@@ -4,35 +4,33 @@ import CoreGraphics
 enum CatGeometry {
     static func head(in rect: CGRect) -> CGPath {
         let path = CGMutablePath()
-        path.move(to: pt(50, 36, rect))
-        c(path, 58, 26, 66, 14, 74, 15.5, rect)
-        c(path, 84, 14, 94, 26, 88, 42, rect)
-        c(path, 96, 54, 92, 66, 82, 74, rect)
-        c(path, 72, 86, 58, 90, 50, 88, rect)
-        c(path, 42, 90, 28, 86, 18, 74, rect)
-        c(path, 8, 66, 4, 54, 12, 42, rect)
-        c(path, 6, 26, 16, 14, 26, 15.5, rect)
-        c(path, 34, 14, 42, 26, 50, 36, rect)
+        path.move(to: pt(18, 44, rect))
+        c(path, 15, 33, 16, 15, 22, 12, rect)
+        c(path, 27, 11, 38, 25, 41, 29, rect)
+        c(path, 47, 27, 53, 27, 59, 29, rect)
+        c(path, 62, 25, 73, 11, 78, 12, rect)
+        c(path, 84, 15, 85, 33, 82, 44, rect)
+        c(path, 94, 60, 86, 83, 68, 88, rect)
+        c(path, 57, 92, 43, 92, 32, 88, rect)
+        c(path, 14, 83, 6, 60, 18, 44, rect)
         path.closeSubpath()
         return path
     }
 
     static func innerEarLeft(in rect: CGRect) -> CGPath {
         let path = CGMutablePath()
-        path.move(to: pt(31, 31, rect))
-        c(path, 24, 26, 25, 18, 32, 17.5, rect)
-        c(path, 38, 17, 41, 24, 37, 31, rect)
-        c(path, 34, 33.5, 32.5, 33, 31, 31, rect)
+        path.move(to: pt(23, 24, rect))
+        c(path, 23, 21, 31, 30, 33, 34, rect)
+        c(path, 28, 33, 25, 35, 23, 37, rect)
         path.closeSubpath()
         return path
     }
 
     static func innerEarRight(in rect: CGRect) -> CGPath {
         let path = CGMutablePath()
-        path.move(to: pt(69, 31, rect))
-        c(path, 76, 26, 75, 18, 68, 17.5, rect)
-        c(path, 62, 17, 59, 24, 63, 31, rect)
-        c(path, 66, 33.5, 67.5, 33, 69, 31, rect)
+        path.move(to: pt(77, 24, rect))
+        c(path, 77, 21, 69, 30, 67, 34, rect)
+        c(path, 72, 33, 75, 35, 77, 37, rect)
         path.closeSubpath()
         return path
     }

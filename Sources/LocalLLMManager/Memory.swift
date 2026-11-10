@@ -19,16 +19,21 @@ struct SystemMemory {
 }
 
 enum MemoryMonitor {
-    static func system() -> SystemMemory {
+    private static let hostPort = mach_host_self()
+    private static let totalMemory: UInt64 = {
         var total: UInt64 = 0
         var length = MemoryLayout<UInt64>.size
         sysctlbyname("hw.memsize", &total, &length, nil, 0)
+        return total
+    }()
 
+    static func system() -> SystemMemory {
+        let total = totalMemory
         var stats = vm_statistics64()
         var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64>.size / MemoryLayout<integer_t>.size)
         let result = withUnsafeMutablePointer(to: &stats) {
             $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                host_statistics64(mach_host_self(), HOST_VM_INFO64, $0, &count)
+                host_statistics64(hostPort, HOST_VM_INFO64, $0, &count)
             }
         }
         guard result == KERN_SUCCESS else {
@@ -85,12 +90,17 @@ enum MemoryMonitor {
     }
 
     private static func process(_ pid: pid_t) -> ProcessUsage? {
-        var info = RUsageV4()
+        // Flavor 6 writes the whole rusage_info_v6. A shorter buffer overflows the stack.
+        var info = rusage_info_v6()
         let status = withUnsafeMutablePointer(to: &info) {
-            proc_pid_rusage(pid, 4, UnsafeMutableRawPointer($0))
+            proc_pid_rusage(pid, RUSAGE_INFO_V6, UnsafeMutableRawPointer($0))
         }
         guard status == 0 else { return nil }
-        return ProcessUsage(footprint: info.footprint, resident: info.resident, wired: info.wired)
+        return ProcessUsage(
+            footprint: info.ri_phys_footprint,
+            resident: info.ri_resident_size,
+            wired: info.ri_wired_size
+        )
     }
 
     private static func children(of pid: pid_t) -> [pid_t] {
@@ -104,27 +114,6 @@ enum MemoryMonitor {
         let limit = min(Int(count), buffer.count)
         return buffer.prefix(limit).filter { $0 > 0 }
     }
-}
-
-private struct RUsageV4 {
-    var uuid: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8) = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-    var userTime: UInt64 = 0
-    var systemTime: UInt64 = 0
-    var pkgIdle: UInt64 = 0
-    var interrupt: UInt64 = 0
-    var pageins: UInt64 = 0
-    var wired: UInt64 = 0
-    var resident: UInt64 = 0
-    var footprint: UInt64 = 0
-    var start: UInt64 = 0
-    var exit: UInt64 = 0
-    var childUser: UInt64 = 0
-    var childSystem: UInt64 = 0
-    var childPkg: UInt64 = 0
-    var childInterrupt: UInt64 = 0
-    var childPageins: UInt64 = 0
-    var diskRead: UInt64 = 0
-    var diskWrite: UInt64 = 0
 }
 
 @_silgen_name("proc_pid_rusage")

@@ -3,7 +3,7 @@ import Foundation
 import Darwin
 
 enum Pane: String, CaseIterable, Hashable {
-    case engines, models, server, speed
+    case overview, engines, models, server, speed
 }
 
 enum ServerPhase: String {
@@ -34,7 +34,9 @@ struct MemorySnapshot: Equatable {
 
 @MainActor
 final class AppModel: ObservableObject {
-    @Published var pane: Pane = .models
+    @Published var pane: Pane = .overview {
+        didSet { if pane != oldValue { tick() } }
+    }
     @Published var engines: [EngineStatus] = []
     @Published var models: [ModelItem] = []
     @Published var jobs: [DownloadJob] = []
@@ -44,11 +46,20 @@ final class AppModel: ObservableObject {
     @Published var repoQuery = ""
     @Published var tokenDraft = ""
     @Published var tokenNote = ""
+    @Published var copiedEngineCommand: String?
+    @Published var searchAuthor = ""
+    @Published var searchFormat = ""
+    @Published var searchSort = "downloads"
+    @Published var searchFinished = false
+    @Published var selectedHubHit: HubHit?
+    private var hubRequestID = UUID()
     @Published var searching = false
     @Published var selectedModelID = ""
     @Published var contextLength = 8192
     @Published var port = 8000
-    @Published var phase: ServerPhase = .stopped
+    @Published var phase: ServerPhase = .stopped {
+        didSet { if phase != oldValue { configureMonitor() } }
+    }
     @Published var runningModel: ModelItem?
     @Published var memory = MemorySnapshot()
     @Published var logText = ""
@@ -88,9 +99,30 @@ final class AppModel: ObservableObject {
         }
         refreshEngines()
         Task { await rescanModels() }
-        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+        configureMonitor()
+        tick()
+    }
+
+    private var monitoringActive = true
+    private var monitorInterval: TimeInterval = 0
+
+    func setMonitoringActive(_ active: Bool) {
+        guard monitoringActive != active else { return }
+        monitoringActive = active
+        configureMonitor()
+        if active { tick() }
+    }
+
+    private func configureMonitor() {
+        let serving = phase == .starting || phase == .ready
+        let interval: TimeInterval = monitoringActive ? (serving ? 1 : 5) : 10
+        guard timer == nil || interval != monitorInterval else { return }
+        timer?.invalidate()
+        monitorInterval = interval
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.tick() }
         }
+        timer?.tolerance = interval * 0.15
     }
 
     deinit {
@@ -204,24 +236,40 @@ final class AppModel: ObservableObject {
 
     func searchHub() {
         let query = repoQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return }
+        guard !query.isEmpty || !searchAuthor.isEmpty || !searchFormat.isEmpty else { return }
         if let repo = Hub.parseRepo(query) {
+            selectedHubHit = nil
             hubHits = []
             loadFiles(repo)
             return
         }
+        let requestID = UUID()
+        hubRequestID = requestID
         searching = true
+        searchFinished = false
+        listedRepo = ""
+        listedFiles = []
+        selectedHubHit = nil
+        hubHits = []
         banner = nil
         let token = TokenStore.effective()
+        let author = searchAuthor.trimmingCharacters(in: .whitespacesAndNewlines)
+        let format = searchFormat
+        let sort = searchSort
         Task {
             do {
-                hubHits = try await Hub.search(query, token: token)
+                let hits = try await Hub.search(query, author: author, format: format, sort: sort, token: token)
+                guard hubRequestID == requestID else { return }
+                hubHits = hits
+                searchFinished = true
                 searching = false
                 if hubHits.isEmpty { banner = "Nenhum modelo encontrado." }
             } catch let error as HubError {
+                guard hubRequestID == requestID else { return }
                 searching = false
                 banner = error.message
             } catch {
+                guard hubRequestID == requestID else { return }
                 searching = false
                 banner = error.localizedDescription
             }
@@ -229,19 +277,31 @@ final class AppModel: ObservableObject {
     }
 
     func loadFiles(_ repo: String) {
+        let requestID = UUID()
+        hubRequestID = requestID
+        listedRepo = ""
+        listedFiles = []
         searching = true
         banner = nil
         let token = TokenStore.effective()
         Task {
             do {
-                listedFiles = try await Hub.files(repo: repo, token: token)
+                async let metadata = try? Hub.metadata(repo: repo, token: token)
+                let files = try await Hub.files(repo: repo, token: token)
+                guard hubRequestID == requestID else { return }
+                let details = await metadata
+                guard hubRequestID == requestID else { return }
+                selectedHubHit = details ?? selectedHubHit
+                listedFiles = files
                 listedRepo = repo
                 searching = false
                 if listedFiles.isEmpty { banner = "Esse repositório não listou arquivos." }
             } catch let error as HubError {
+                guard hubRequestID == requestID else { return }
                 searching = false
                 banner = error.message
             } catch {
+                guard hubRequestID == requestID else { return }
                 searching = false
                 banner = error.localizedDescription
             }
@@ -415,6 +475,64 @@ final class AppModel: ObservableObject {
         defaults.set(port, forKey: "lulu.port")
     }
 
+    func installAdditionalEngine(_ id: String) {
+        guard busyEngineID == nil else { return }
+        guard let brew = Machine.executable(["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]) else {
+            banner = "Instale o Homebrew ou use o download oficial do motor."
+            return
+        }
+        let major = ProcessInfo.processInfo.operatingSystemVersion.majorVersion
+        let steps: [[String]]
+        switch id {
+        case "nativ":
+            guard major >= 26 else {
+                banner = "O Nativ requer macOS 26 ou posterior."
+                return
+            }
+            steps = [["install", "--cask", "nativ"]]
+        case "ollama": steps = [["install", "ollama"]]
+        case "lmstudio": steps = [["install", "--cask", "lm-studio"]]
+        case "jan": steps = [["install", "--cask", "jan"]]
+        case "llama":
+            guard major >= 15 else {
+                banner = "O Llama requer macOS 15 ou posterior."
+                return
+            }
+            steps = [["install", "--cask", "llama-app"]]
+        case "gpt4all": steps = [["install", "--cask", "gpt4all"]]
+        case "vllm":
+            guard major >= 15 else {
+                banner = "vLLM Metal requer macOS 15 ou posterior."
+                return
+            }
+            steps = [["tap", "vllm-project/vllm-metal", "https://github.com/vllm-project/vllm-metal"],
+                     ["install", "vllm-project/vllm-metal/vllm-metal"]]
+        default: return
+        }
+        busyEngineID = id
+        operationText = "Instalando \(id) via Homebrew…\n"
+        Task { [weak self] in
+            for arguments in steps {
+                self?.appendOperation("$ brew " + arguments.joined(separator: " ") + "\n")
+                let code = await Task.detached {
+                    Shell.run(executable: brew, arguments: arguments,
+                              extraEnv: ["HOMEBREW_NO_AUTO_UPDATE": "1", "HOMEBREW_NO_ENV_HINTS": "1"]) { chunk in
+                        Task { @MainActor [weak self] in self?.appendOperation(chunk) }
+                    }
+                }.value
+                guard code == 0 else {
+                    self?.busyEngineID = nil
+                    self?.banner = "Instalação de \(id) interrompida (código \(code)). Consulte a atividade de instalação."
+                    return
+                }
+            }
+            self?.busyEngineID = nil
+            self?.banner = id == "gpt4all"
+                ? "O instalador do GPT4All foi baixado. Conclua a instalação na janela do Homebrew."
+                : "Instalação de \(id) concluída. Configure os modelos e a execução pelo próprio motor."
+        }
+    }
+
     private func runEngineCommand(_ id: String, installing: Bool) {
         guard busyEngineID == nil, let spec = EngineCatalog.spec(id) else { return }
         if let message = EngineCatalog.missingInstallerMessage(for: spec) {
@@ -491,21 +609,25 @@ final class AppModel: ObservableObject {
             phase = .failed
             banner = "O motor parou."
         }
-        let next = makeSnapshot()
-        if next != memory { memory = next }
+        if monitoringActive && (pane == .overview || pane == .speed) {
+            let next = makeSnapshot()
+            if next != memory { memory = next }
+        }
         tickCount += 1
-        if tickCount.isMultiple(of: 2) {
+        if monitoringActive && pane == .server && tickCount.isMultiple(of: 2) {
             let tail = Format.tail(LuluPaths.log)
             if tail != logText { logText = tail }
         }
         guard (phase == .starting || phase == .ready), !probeInFlight else { return }
         probeInFlight = true
         let currentPort = port
+        let currentPID = serverPID
         let llama = runningModel?.engineID == "llama.cpp"
         Task {
             let health = await Probe.classify(port: currentPort)
             let speed = llama ? await Probe.speed(port: currentPort) : nil
             probeInFlight = false
+            guard currentPID == serverPID, currentPort == port else { return }
             apply(health, speed)
         }
     }
@@ -552,7 +674,7 @@ final class AppModel: ObservableObject {
     private func apply(_ health: ServerPhase?, _ speed: (prompt: Double, predict: Double, peak: Int)?) {
         if health == .ready, phase == .starting {
             phase = .ready
-            if baseline == nil { baseline = memory.footprint }
+            if baseline == nil { baseline = serverPID > 0 ? MemoryMonitor.tree(of: serverPID).footprint : 0 }
         }
         guard var copy = Optional(memory) else { return }
         if let speed {
@@ -560,10 +682,10 @@ final class AppModel: ObservableObject {
             copy.predictRate = speed.predict
             copy.contextPeak = speed.peak
         }
-        if phase == .ready, runningModel?.engineID != "llama.cpp", let baseline, copy.footprint + 8_000_000 < baseline {
+        if monitoringActive, pane == .overview || pane == .speed, phase == .ready, runningModel?.engineID != "llama.cpp", let baseline, copy.footprint + 8_000_000 < baseline {
             self.baseline = copy.footprint
         }
-        memory = copy
+        if copy != memory { memory = copy }
     }
 
     private func handle(_ event: TransferEvent) {

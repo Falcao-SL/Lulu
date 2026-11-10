@@ -29,6 +29,7 @@ mkdir -p "${APP_BUNDLE}/Contents/MacOS"
 mkdir -p "${APP_BUNDLE}/Contents/Resources"
 cp "${BUILD_DIR}/Lulu" "${APP_BUNDLE}/Contents/MacOS/Lulu"
 cp "${BUILD_DIR}/AppIcon.icns" "${APP_BUNDLE}/Contents/Resources/AppIcon.icns"
+cp ThirdParty/Lucide/LICENSE "${APP_BUNDLE}/Contents/Resources/Lucide-LICENSE.txt"
 chmod +x "${APP_BUNDLE}/Contents/MacOS/Lulu"
 
 cat << PLIST > "${APP_BUNDLE}/Contents/Info.plist"

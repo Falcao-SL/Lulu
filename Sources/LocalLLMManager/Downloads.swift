@@ -48,6 +48,24 @@ struct HubHit: Identifiable, Equatable {
     var id: String
     var downloads: Int
     var likes: Int
+    var author: String = ""
+    var library: String = ""
+    var task: String = ""
+    var tags: [String] = []
+    var baseModel: String = ""
+    var license: String = ""
+    var modified: String = ""
+    var parameters: Int64 = 0
+
+    var publisher: String { author.isEmpty ? String(id.split(separator: "/").first ?? "") : author }
+    var laboratory: String { baseModel.split(separator: "/").first.map(String.init) ?? "Não informado" }
+    var quantization: String { ModelMetadata.quantization(in: id + " " + tags.joined(separator: " ")) ?? "Não informada" }
+    var format: String {
+        let value = (id + " " + library + " " + tags.joined(separator: " ")).lowercased()
+        if value.contains("gguf") { return "GGUF" }
+        if value.contains("mlx") { return "MLX" }
+        return library.isEmpty ? "Formato não informado" : library
+    }
 }
 
 struct ListedFile: Identifiable, Equatable {
@@ -120,19 +138,41 @@ enum Hub {
         return repo
     }
 
-    static func search(_ query: String, token: String?) async throws -> [HubHit] {
+    static func search(_ query: String, author: String = "", format: String = "", sort: String = "downloads", token: String?) async throws -> [HubHit] {
         var components = URLComponents(string: "https://huggingface.co/api/models")!
         components.queryItems = [
             URLQueryItem(name: "search", value: query),
-            URLQueryItem(name: "limit", value: "12"),
-            URLQueryItem(name: "sort", value: "downloads"),
+            URLQueryItem(name: "limit", value: "40"),
+            URLQueryItem(name: "full", value: "true"),
+            URLQueryItem(name: "config", value: "true"),
+            URLQueryItem(name: "cardData", value: "true"),
+            URLQueryItem(name: "direction", value: "-1"),
+            URLQueryItem(name: "sort", value: sort),
         ]
+        if !author.isEmpty { components.queryItems?.append(URLQueryItem(name: "author", value: author)) }
+        if !format.isEmpty { components.queryItems?.append(URLQueryItem(name: "filter", value: format)) }
         let data = try await get(components.url!, token: token)
         guard let rows = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { return [] }
-        return rows.compactMap { row in
+        return rows.compactMap(decodeHit)
+    }
+
+    static func metadata(repo: String, token: String?) async throws -> HubHit? {
+        guard let url = URL(string: "https://huggingface.co/api/models/\(repo)") else { return nil }
+        let data = try await get(url, token: token)
+        guard let row = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        return decodeHit(row)
+    }
+
+    private static func decodeHit(_ row: [String: Any]) -> HubHit? {
             guard let id = row["id"] as? String else { return nil }
-            return HubHit(id: id, downloads: int(row["downloads"]), likes: int(row["likes"]))
-        }
+            let card = row["cardData"] as? [String: Any] ?? [:]
+            let base = (card["base_model"] as? String) ?? (card["base_model"] as? [String])?.first ?? ""
+            let tensors = row["safetensors"] as? [String: Any] ?? [:]
+            return HubHit(id: id, downloads: int(row["downloads"]), likes: int(row["likes"]),
+                          author: row["author"] as? String ?? "", library: row["library_name"] as? String ?? "",
+                          task: row["pipeline_tag"] as? String ?? "", tags: row["tags"] as? [String] ?? [],
+                          baseModel: base, license: card["license"] as? String ?? "",
+                          modified: row["lastModified"] as? String ?? "", parameters: int64(tensors["total"]))
     }
 
     static func files(repo: String, token: String?) async throws -> [ListedFile] {
