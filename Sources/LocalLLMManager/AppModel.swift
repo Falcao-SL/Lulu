@@ -54,7 +54,9 @@ final class AppModel: ObservableObject {
     @Published var selectedHubHit: HubHit?
     private var hubRequestID = UUID()
     @Published var searching = false
-    @Published var selectedModelID = ""
+    @Published var selectedModelID = "" {
+        didSet { normalizeContext() }
+    }
     @Published var contextLength = 8192
     @Published var port = 8000
     @Published var phase: ServerPhase = .stopped {
@@ -73,7 +75,26 @@ final class AppModel: ObservableObject {
     @Published var confirmPurge = false
     @Published var copied = false
 
-    let contextOptions = [2048, 4096, 8192, 16384, 32768, 65536]
+    let contextOptions = [2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576]
+    var selectedContextLimit: Int? {
+        ContextPolicy.limit(models.first { $0.id == selectedModelID }?.arch?.trainedContext)
+    }
+
+    var supportedContextOptions: [Int] {
+        var options = ContextPolicy.options(presets: contextOptions, declared: selectedContextLimit)
+        if phase == .ready || phase == .starting, !options.contains(contextLength) {
+            options.append(contextLength)
+            options.sort()
+        }
+        return options
+    }
+
+    private func normalizeContext() {
+        guard phase == .stopped || phase == .failed else { return }
+        let value = ContextPolicy.clamped(contextLength, declared: selectedContextLimit)
+        if value != contextLength { contextLength = value }
+    }
+
     private let transfers = HFTransfers()
     private var serverProcess: Process?
     private var serverPID: pid_t = 0
@@ -90,7 +111,7 @@ final class AppModel: ObservableObject {
         let defaults = UserDefaults.standard
         selectedModelID = defaults.string(forKey: "lulu.model") ?? ""
         let storedContext = defaults.integer(forKey: "lulu.context")
-        if contextOptions.contains(storedContext) { contextLength = storedContext }
+        if storedContext > 0 { contextLength = storedContext }
         let storedPort = defaults.integer(forKey: "lulu.port")
         if storedPort > 0 { port = storedPort }
         jobs = DownloadStore.load()
@@ -193,6 +214,7 @@ final class AppModel: ObservableObject {
             selectedModelID = models.first?.id ?? ""
         }
         adoptSession()
+        normalizeContext()
         persist()
     }
 
@@ -363,6 +385,14 @@ final class AppModel: ObservableObject {
         guard phase == .stopped || phase == .failed else { return }
         guard let model = models.first(where: { $0.id == selectedModelID }) else {
             banner = "Escolha um modelo."
+            return
+        }
+        guard contextLength > 0 else {
+            banner = "Escolha um contexto maior que zero."
+            return
+        }
+        if let limit = selectedContextLimit, contextLength > limit {
+            banner = "Este modelo informa um máximo de \(Format.tokens(limit)) tokens. Ajuste o contexto antes de iniciar."
             return
         }
         guard let engine = engines.first(where: { $0.id == model.engineID }), engine.installed, !engine.binary.isEmpty else {
@@ -620,8 +650,9 @@ final class AppModel: ObservableObject {
             return
         }
         serverPID = session.pid
+        phase = .starting
         port = session.port
-        if contextOptions.contains(session.context) { contextLength = session.context }
+        if session.context > 0 { contextLength = session.context }
         if let match = models.first(where: { $0.path == session.modelPath }) {
             selectedModelID = match.id
             runningModel = match

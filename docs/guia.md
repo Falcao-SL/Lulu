@@ -72,3 +72,13 @@ Cada resultado distingue o **publicador** do repositório e o **laboratório do 
 **Ver arquivos** carrega o repositório para seleção antes de baixar. Uma nova busca descarta respostas anteriores ainda em trânsito. A documentação dos campos está na [API do Hugging Face](https://huggingface.co/docs/huggingface_hub/package_reference/hf_api).
 
 O botão **Purge de memória** também está na Visão geral, dentro do cartão de memória, e usa a mesma confirmação da tela Desempenho.
+
+## Contextos maiores
+
+A tela Servidor oferece de 2.048 até 1.048.576 tokens, incluindo 128K, 256K e 512K. O seletor usa um menu para acomodar as opções. Quando há metadados disponíveis, exibe o contexto informado pelo modelo e a estimativa de KV cache. A escolha de um valor maior depende da capacidade do modelo, do motor e da memória disponível. Pare o servidor para alterar o contexto e inicie novamente para aplicar.
+
+A seleção de contexto mostra o custo estimado de KV em cada opção. Três indicadores comparam o tamanho dos pesos, o cache estimado e o subtotal. O subtotal não inclui buffers, projetor multimodal e outras alocações do motor, e pode diferir do consumo real. Sem metadados de KV, a estimativa aparece como —.
+
+## Limite por modelo
+
+O máximo declarado nos metadados locais aparece em destaque na tela Servidor. O menu filtra valores acima desse máximo e inclui o limite exato, mesmo fora dos presets. Ao trocar de modelo, uma configuração acima do máximo é reduzida automaticamente. A inicialização do servidor também valida o limite. Configurações de uma sessão já em execução continuam visíveis até sua parada. Quando os metadados não informam o contexto máximo, a interface identifica essa ausência e não pode garantir a validação.

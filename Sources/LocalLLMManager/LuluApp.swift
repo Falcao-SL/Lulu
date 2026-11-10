@@ -453,16 +453,38 @@ private struct ServerPane: View {
                             .font(LuluTheme.TypeStyle.caption.monospacedDigit()).foregroundStyle(.secondary)
                     }
                     Picker("Contexto", selection: $model.contextLength) {
-                        ForEach(model.contextOptions, id: \.self) { value in
-                            Text(Format.tokens(value)).tag(value)
+                        ForEach(model.supportedContextOptions, id: \.self) { value in
+                            Text(contextOption(value)).tag(value)
                         }
                     }
                     .labelsHidden()
                     .accessibilityLabel("Contexto")
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.menu)
                     .disabled(serverActive)
                     .onChange(of: model.contextLength) { _, _ in model.persist() }
+                    HStack(spacing: LuluTheme.Space.md) {
+                        LuluGlyph("memorychip").foregroundStyle(LuluTheme.accent)
+                        VStack(alignment: .leading, spacing: LuluTheme.Space.xs) {
+                            Text("Máximo do modelo").font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
+                            Text(model.selectedContextLimit.map { Format.tokens($0) + " tokens" } ?? "Não informado nos arquivos locais")
+                                .font(LuluTheme.TypeStyle.section).monospacedDigit()
+                        }
+                        Spacer()
+                        if let maximum = model.selectedContextLimit {
+                            LuluStatusBadge(model.contextLength > maximum ? "Acima do limite" : "Dentro do limite",
+                                            tone: model.contextLength > maximum ? .warning : .success)
+                        }
+                    }
+                    .padding(LuluTheme.Space.md)
+                    .background(LuluTheme.subtle, in: RoundedRectangle(cornerRadius: LuluTheme.Radius.control))
+                    Text(model.selectedContextLimit == nil
+                         ? "Sem metadados de contexto, o Lulu não consegue validar o máximo deste modelo."
+                         : "Limite lido dos metadados locais. O menu oferece apenas valores suportados pelo modelo.")
+                        .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
+
                 }
+
+                contextMemory
 
                 HStack {
                     Text("Porta")
@@ -507,6 +529,42 @@ private struct ServerPane: View {
                 logBox(model.logText, empty: "O log do servidor aparece aqui.")
             }
         }
+    }
+
+    private var selectedModel: ModelItem? {
+        model.models.first { $0.id == model.selectedModelID }
+    }
+
+    private var kvEstimate: UInt64? {
+        guard let bytes = selectedModel?.arch?.kvBytes(tokens: model.contextLength), bytes > 0 else { return nil }
+        return bytes
+    }
+
+    private func contextOption(_ tokens: Int) -> String {
+        let label = tokens == 1048576 ? "1M · 1.048.576 tokens" : "\(tokens / 1024)K · \(Format.tokens(tokens)) tokens"
+        guard let bytes = selectedModel?.arch?.kvBytes(tokens: tokens), bytes > 0 else { return label }
+        return label + " · KV ≈ " + Format.bytes(bytes)
+    }
+
+    private var contextMemory: some View {
+        VStack(alignment: .leading, spacing: LuluTheme.Space.md) {
+            LuluSectionHeader("Memória para este contexto", symbol: "memorychip")
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 170), spacing: LuluTheme.Space.md)], spacing: LuluTheme.Space.md) {
+                LuluMetric("Pesos · tamanho em disco", value: selectedModel.map { Format.bytes($0.sizeBytes) } ?? "—", symbol: "cube")
+                LuluMetric("KV cache estimado", value: kvEstimate.map(Format.bytes) ?? "—", symbol: "memorychip")
+                LuluMetric("Pesos + KV · estimativa", value: subtotalEstimate, symbol: "layers")
+            }
+            Text(kvEstimate == nil
+                 ? "Metadados de KV indisponíveis para este modelo. O consumo real aparece em Desempenho após iniciar o servidor."
+                 : "O subtotal usa o tamanho dos pesos em disco e o KV estimado. Buffers, projetor multimodal e outras alocações do motor podem aumentar o consumo. O uso real aparece em Desempenho.")
+                .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
+        }
+    }
+
+    private var subtotalEstimate: String {
+        guard let selectedModel, let kvEstimate else { return "—" }
+        let (total, overflow) = selectedModel.sizeBytes.addingReportingOverflow(kvEstimate)
+        return overflow ? "—" : "≈ " + Format.bytes(total)
     }
 
     private var serverActive: Bool { model.phase == .starting || model.phase == .ready }
