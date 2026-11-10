@@ -70,19 +70,23 @@ jobs:
 
       - name: Notarize and staple DMGs
         env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_NOTARY_API_KEY: ${{ secrets.APPLE_NOTARY_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER_ID: ${{ secrets.APPLE_API_ISSUER_ID }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          test -n "${APPLE_ID:-}" && test -n "${APPLE_TEAM_ID:-}" && test -n "${APPLE_APP_PASSWORD:-}" || {
-            echo "Missing APPLE_ID, APPLE_TEAM_ID or APPLE_APP_PASSWORD secrets." >&2; exit 1;
+          test -n "${APPLE_NOTARY_API_KEY:-}" && test -n "${APPLE_API_KEY_ID:-}" && test -n "${APPLE_API_ISSUER_ID:-}" || {
+            echo "Missing Apple notarization API key secrets." >&2; exit 1;
           }
+          umask 077
+          key="$RUNNER_TEMP/AuthKey_${APPLE_API_KEY_ID}.p8"
+          trap 'rm -f "$key"' EXIT
+          printf '%s' "$APPLE_NOTARY_API_KEY" | base64 --decode > "$key"
           for arch in arm64 x86_64; do
             dmg="dist/Lulu-${VERSION}-macos-${arch}.dmg"
             result="$RUNNER_TEMP/lulu-notary-${arch}.json"
-            xcrun notarytool submit "$dmg" --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_APP_PASSWORD" --wait --output-format json > "$result"
+            xcrun notarytool submit "$dmg" --key "$key" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER_ID" --wait --output-format json > "$result"
             python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print("Notary status:", d.get("status")); sys.exit(0 if d.get("status") == "Accepted" else 1)' "$result"
             xcrun stapler staple "$dmg"
             xcrun stapler validate "$dmg"
