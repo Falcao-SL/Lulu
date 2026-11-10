@@ -32,6 +32,32 @@ jobs:
           echo "version=${base}.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
           echo "build=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
 
+      - name: Import Developer ID certificate
+        env:
+          CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.APPLE_KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "${CERTIFICATE:-}" && test -n "${CERTIFICATE_PASSWORD:-}" && test -n "${KEYCHAIN_PASSWORD:-}" || {
+            echo "Missing APPLE_CERTIFICATE_BASE64, APPLE_CERTIFICATE_PASSWORD or APPLE_KEYCHAIN_PASSWORD secrets." >&2
+            exit 1
+          }
+          kc="$RUNNER_TEMP/lulu-signing-${GITHUB_RUN_ID}.keychain-db"
+          cert="$RUNNER_TEMP/lulu-${GITHUB_RUN_ID}.p12"
+          security list-keychains -d user > "$RUNNER_TEMP/lulu-keychains-${GITHUB_RUN_ID}.txt"
+          trap 'rm -f "$cert"' EXIT
+          printf '%s' "$CERTIFICATE" | base64 --decode > "$cert"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$kc"
+          security set-keychain-settings -lut 21600 "$kc"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$kc"
+          security import "$cert" -k "$kc" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$kc"
+          identity=$(security find-identity -v -p codesigning "$kc" | awk '/Developer ID Application:/ {print $2; exit}')
+          test -n "$identity" || { echo "No Developer ID Application identity found." >&2; exit 1; }
+          echo "SIGNING_IDENTITY=$identity" >> "$GITHUB_ENV"
+          echo "LULU_SIGNING_KEYCHAIN=$kc" >> "$GITHUB_ENV"
+
       - name: Package
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -41,6 +67,27 @@ jobs:
           rm -rf dist
           ARCH=arm64 ./Scripts/package-macos.sh
           ARCH=x86_64 ./Scripts/package-macos.sh
+
+      - name: Notarize and staple DMGs
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          test -n "${APPLE_ID:-}" && test -n "${APPLE_TEAM_ID:-}" && test -n "${APPLE_APP_PASSWORD:-}" || {
+            echo "Missing APPLE_ID, APPLE_TEAM_ID or APPLE_APP_PASSWORD secrets." >&2; exit 1;
+          }
+          for arch in arm64 x86_64; do
+            dmg="dist/Lulu-${VERSION}-macos-${arch}.dmg"
+            result="$RUNNER_TEMP/lulu-notary-${arch}.json"
+            xcrun notarytool submit "$dmg" --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_APP_PASSWORD" --wait --output-format json > "$result"
+            python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print("Notary status:", d.get("status")); sys.exit(0 if d.get("status") == "Accepted" else 1)' "$result"
+            xcrun stapler staple "$dmg"
+            xcrun stapler validate "$dmg"
+            cp "$dmg" "dist/Lulu-macos-${arch}.dmg"
+          done
           cd dist
           shasum -a 256 Lulu-*.zip Lulu-*.dmg > SHA256SUMS
 
@@ -57,7 +104,7 @@ jobs:
 
             macOS 14 ou mais novo, Apple Silicon ou Intel. MLX requer Apple Silicon; no Intel, use modelos GGUF com llama.cpp.
 
-            A assinatura deste pacote é ad hoc, feita no runner. Na primeira abertura, clique com o botão direito em Lulu e escolha Abrir.
+            Signed with Developer ID and notarized by Apple.
           files: |
             dist/Lulu-${{ steps.version.outputs.version }}-macos-arm64.zip
             dist/Lulu-${{ steps.version.outputs.version }}-macos-arm64.dmg
@@ -66,3 +113,11 @@ jobs:
             dist/Lulu-${{ steps.version.outputs.version }}-macos-x86_64.dmg
             dist/Lulu-macos-x86_64.dmg
             dist/SHA256SUMS
+
+      - name: Remove temporary signing keychain
+        if: always()
+        run: |
+          set -euo pipefail
+          kc="$RUNNER_TEMP/lulu-signing-${GITHUB_RUN_ID}.keychain-db"
+          security delete-keychain "$kc" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/lulu-${GITHUB_RUN_ID}.p12" "$RUNNER_TEMP/lulu-keychains-${GITHUB_RUN_ID}.txt"

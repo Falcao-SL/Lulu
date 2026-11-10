@@ -17,7 +17,7 @@ Lulu requires macOS 14 or later. Apple Silicon supports MLX and GGUF; Intel Macs
 
 ## Getting started
 
-1. Download the appropriate DMG from [the latest release](https://github.com/Falcao-SL/Lulu/releases/latest). The package is ad hoc signed, not notarized; on first launch, right-click Lulu and choose Open.
+1. Download the appropriate DMG from [the latest release](https://github.com/Falcao-SL/Lulu/releases/latest). Check the release notes for signing and installation details.
 2. In **Engines**, install an engine compatible with your Mac and model. MLX uses `uv`; llama.cpp uses Homebrew.
 3. In **Models**, search for a model or enter its Hugging Face repository and download its required files. MLX models need weights, configuration and tokenizer; GGUF models may also need a multimodal projector.
 4. In **Server**, select the model, set a context and start the server. The default endpoint is `http://127.0.0.1:8000/v1` and listens only on this Mac.
@@ -29,7 +29,7 @@ The [user guide](docs/guia.md) contains additional details on downloads, memory 
 
 Install the Xcode Command Line Tools and macOS SDK, then run `make build`. The app is written to `build/Lulu.app`. `make package` creates a DMG and ZIP; set `ARCH=x86_64` for Intel or `ARCH=arm64` for Apple Silicon.
 
-Each push to `main` starts the macOS release workflow, which builds and publishes both architectures, versioned ZIP and DMG files, stable DMG names and SHA-256 checksums. Release packages are ad hoc signed and are not Apple notarized.
+Each push to `main` starts the macOS release workflow, which builds and publishes both architectures, versioned ZIP and DMG files, stable DMG names and SHA-256 checksums. The release pipeline requires Developer ID signing and Apple notarization credentials; local builds use ad hoc signing by default.
 
 ## Data and privacy
 

@@ -11,8 +11,13 @@ export VERSION BUILD ARCH
 ./Scripts/build.sh
 
 APP="build/Lulu.app"
-codesign --force --sign - "${APP}"
-codesign --verify --verbose=2 "${APP}"
+SIGNING_IDENTITY="${SIGNING_IDENTITY:--}"
+if [[ "$SIGNING_IDENTITY" == "-" ]]; then
+  codesign --force --sign - "${APP}"
+else
+  codesign --force --sign "$SIGNING_IDENTITY" --keychain "${LULU_SIGNING_KEYCHAIN:?Missing signing keychain}" --options runtime --timestamp "${APP}"
+fi
+codesign --verify --deep --strict --verbose=2 "${APP}"
 
 mkdir -p dist
 ZIP="dist/Lulu-${VERSION}-macos-${ARCH}.zip"

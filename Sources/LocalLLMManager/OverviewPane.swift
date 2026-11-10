@@ -18,6 +18,7 @@ struct OverviewPane: View {
             VStack(alignment: .leading, spacing: Space.xl) {
                 LuluPageHeader("Overview", symbol: "square.grid.2x2")
                 session
+                updates
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 155), spacing: Space.md)], spacing: Space.md) {
                     LuluMetric("Available memory", value: model.memory.total == 0 ? "—" : Format.bytes(model.memory.available), symbol: "memorychip")
                     LuluMetric("Generation · tok/s", value: model.phase == .ready ? Format.rate(model.memory.predictRate) : "—", symbol: "bolt")
@@ -40,6 +41,27 @@ struct OverviewPane: View {
         case .stopped: LuluStatusBadge("Stopped", tone: .neutral)
         case .failed: LuluStatusBadge("Failed", tone: .danger)
         }
+    }
+
+    private var updates: some View {
+        HStack(spacing: Space.md) {
+            LuluIcon("arrow.down.circle")
+            VStack(alignment: .leading, spacing: Space.xs) {
+                Text(model.updateVersion.map { "Lulu \($0) is available" } ?? "Lulu \(AppUpdates.current)")
+                    .font(LuluTheme.TypeStyle.body.weight(.medium))
+                Text(model.updateVersion == nil ? "Check for a newer release." : "Download the latest installer for this Mac.")
+                    .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            if model.updateURL != nil {
+                Button("Download update") { model.downloadUpdate() }.buttonStyle(.borderedProminent)
+            } else {
+                Button(model.checkingUpdate ? "Checking…" : "Check for updates") { model.checkForUpdates(showFeedback: true) }
+                    .disabled(model.checkingUpdate)
+            }
+        }
+        .padding(Space.lg)
+        .luluCard()
     }
 
     private var session: some View {

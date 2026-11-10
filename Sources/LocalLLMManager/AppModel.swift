@@ -75,6 +75,9 @@ final class AppModel: ObservableObject {
     @Published var confirmDeleteModel: String?
     @Published var confirmPurge = false
     @Published var copied = false
+    @Published var updateVersion: String?
+    @Published var updateURL: URL?
+    @Published var checkingUpdate = false
 
     let contextOptions = [2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576]
     var selectedContextLimit: Int? {
@@ -124,6 +127,31 @@ final class AppModel: ObservableObject {
         Task { await rescanModels() }
         configureMonitor()
         tick()
+        checkForUpdates()
+    }
+
+    func checkForUpdates(showFeedback: Bool = false) {
+        guard !checkingUpdate else { return }
+        checkingUpdate = true
+        Task { [weak self] in
+            do {
+                let release = try await AppUpdates.latest()
+                guard let self else { return }
+                self.updateVersion = release?.version
+                self.updateURL = release?.download
+                self.checkingUpdate = false
+                if showFeedback && release == nil { self.banner = "Lulu is up to date." }
+            } catch {
+                guard let self else { return }
+                self.checkingUpdate = false
+                if showFeedback { self.banner = "Could not check for updates. Please try again." }
+            }
+        }
+    }
+
+    func downloadUpdate() {
+        guard let url = updateURL else { return }
+        NSWorkspace.shared.open(url)
     }
 
     private var monitoringActive = true
