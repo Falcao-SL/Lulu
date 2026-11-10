@@ -1,0 +1,46 @@
+# Depois de cada Release macOS, publica o download atual em falcaosl.com/lulu/.
+# O GITHUB_TOKEN de uma release não dispara `on: release`, então o gatilho é
+# o fim do workflow de release. workflow_dispatch atualiza o site sem um build novo.
+
+name: Update product site
+
+on:
+  workflow_run:
+    workflows: ["Release macOS"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lulu-site
+  cancel-in-progress: false
+
+jobs:
+  update:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    name: Publish current download
+    runs-on: [self-hosted, Linux, homelab]
+    env:
+      HOST: ${{ secrets.HOMELAB_DEPLOY_HOST || '127.0.0.1' }}
+      DEPLOY_USER: deploy
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Write release.json and rsync it to the hub
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SSH_KEY: ${{ secrets.HOMELAB_DEPLOY_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "${SSH_KEY:-}" || { echo "Falta secret HOMELAB_DEPLOY_SSH_KEY na org"; exit 1; }
+          python3 Scripts/sync-site-release.py --output "$RUNNER_TEMP/release.json"
+          python3 -m json.tool "$RUNNER_TEMP/release.json" >/dev/null
+          install -m 600 /dev/null key
+          printf '%s\n' "$SSH_KEY" > key
+          ssh_opts=(-i key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null)
+          rsync -az -e "ssh ${ssh_opts[*]}" \
+            "$RUNNER_TEMP/release.json" \
+            "${DEPLOY_USER}@${HOST}:/data/sites/hub/public/lulu/release.json"
+          echo "lulu/release.json publicado"
