@@ -12,7 +12,10 @@ struct EngineStatus: Identifiable, Equatable {
 }
 
 enum EngineCatalog {
-    static let specs: [Spec] = [
+    static let specs: [Spec] = {
+        var items: [Spec] = []
+        #if arch(arm64)
+        items += [
         Spec(
             id: "mlx-lm",
             name: "mlx-lm",
@@ -25,13 +28,16 @@ enum EngineCatalog {
             blurb: "Texto e visão em MLX. A mesma API.",
             install: .uv(package: "mlx-vlm", directory: "mlx-vlm", distPrefix: "mlx_vlm-", binary: "mlx_vlm.server")
         ),
-        Spec(
+        ]
+        #endif
+        items += [Spec(
             id: "llama.cpp",
             name: "llama.cpp",
             blurb: "GGUF no llama-server, com flash attention na GPU.",
             install: .brew(formula: "llama.cpp", cellar: "llama.cpp", binary: "llama-server")
-        ),
-    ]
+        )]
+        return items
+    }()
 
     struct Spec {
         var id: String

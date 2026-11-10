@@ -38,7 +38,11 @@ jobs:
           BUILD: ${{ steps.version.outputs.build }}
         run: |
           chmod +x Scripts/build.sh Scripts/package-macos.sh
-          ./Scripts/package-macos.sh
+          rm -rf dist
+          ARCH=arm64 ./Scripts/package-macos.sh
+          ARCH=x86_64 ./Scripts/package-macos.sh
+          cd dist
+          shasum -a 256 Lulu-*.zip Lulu-*.dmg > SHA256SUMS
 
       - name: Publish
         uses: softprops/action-gh-release@v2
@@ -51,11 +55,14 @@ jobs:
           body: |
             Build da main em `${{ github.sha }}`.
 
-            macOS 14 ou mais novo, Apple Silicon.
+            macOS 14 ou mais novo, Apple Silicon ou Intel. MLX requer Apple Silicon; no Intel, use modelos GGUF com llama.cpp.
 
             A assinatura deste pacote é ad hoc, feita no runner. Na primeira abertura, clique com o botão direito em Lulu e escolha Abrir.
           files: |
             dist/Lulu-${{ steps.version.outputs.version }}-macos-arm64.zip
             dist/Lulu-${{ steps.version.outputs.version }}-macos-arm64.dmg
             dist/Lulu-macos-arm64.dmg
+            dist/Lulu-${{ steps.version.outputs.version }}-macos-x86_64.zip
+            dist/Lulu-${{ steps.version.outputs.version }}-macos-x86_64.dmg
+            dist/Lulu-macos-x86_64.dmg
             dist/SHA256SUMS

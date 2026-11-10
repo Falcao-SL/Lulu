@@ -387,6 +387,12 @@ final class AppModel: ObservableObject {
             banner = "Escolha um modelo."
             return
         }
+        #if arch(x86_64)
+        guard model.engineID == "llama.cpp" else {
+            banner = "Modelos MLX exigem Apple Silicon. Neste Mac Intel, use um modelo GGUF com llama.cpp."
+            return
+        }
+        #endif
         guard contextLength > 0 else {
             banner = "Escolha um contexto maior que zero."
             return

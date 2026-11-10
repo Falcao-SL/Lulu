@@ -4,7 +4,7 @@
 
 **Sua IA, neste Mac.** Um app nativo para organizar modelos, executar servidores locais e acompanhar memória e desempenho, sem alternar entre terminais.
 
-O Lulu usa SwiftUI e requer **macOS 14 ou posterior em Apple Silicon**. Os motores são instalados separadamente: MLX via `uv`, llama.cpp via Homebrew.
+O Lulu usa SwiftUI e requer **macOS 14 ou posterior**, em Apple Silicon ou Intel. Os motores são instalados separadamente: MLX via `uv` (somente Apple Silicon) e llama.cpp via Homebrew (inclusive Intel, com modelos GGUF).
 
 ## Um painel para começar
 
@@ -50,7 +50,7 @@ O ícone é desenhado com Core Graphics em todos os tamanhos pelo script `Script
 
 ## Distribuição
 
-Cada push na `main` aciona `.github/workflows/release-macos.yml` no runner da organização (`self-hosted`, `macOS`, `ARM64`). O fluxo compila, assina ad hoc e publica a release `v2.0.<número do job>` com ZIP, DMG e `SHA256SUMS`. A assinatura ad hoc não equivale à notarização da Apple.
+Cada push na `main` aciona `.github/workflows/release-macos.yml` no runner da organização (`self-hosted`, `macOS`, `ARM64`). O fluxo compila para arm64 e x86_64, assina ad hoc e publica a release `v2.0.<número do job>` com ZIP e DMG para cada arquitetura e `SHA256SUMS`. A assinatura ad hoc não equivale à notarização da Apple.
 
 `VERSION` registra a versão de marketing; o pipeline usa o número do job como terceiro componente e `CFBundleVersion`.
 

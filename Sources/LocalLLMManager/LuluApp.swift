@@ -164,6 +164,10 @@ private struct EnginesPane: View {
                 Button("Atualizar", luluSymbol: "arrow.clockwise") { model.refreshEngines() }
             }
             LuluSectionHeader("Motores integrados", symbol: "slider.horizontal.3")
+            #if arch(x86_64)
+            Text("Neste Mac Intel, use modelos GGUF com llama.cpp. Os motores MLX requerem Apple Silicon.")
+                .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
+            #endif
             ForEach(model.engines) { engine in
                 HStack(alignment: .top, spacing: LuluTheme.Space.md) {
                     LuluIcon(engine.id == "mlx-vlm" ? "eye" : engine.id == "llama.cpp" ? "shippingbox" : "cpu")
@@ -630,7 +634,7 @@ private struct SpeedPane: View {
                     tile("Liberável", Format.bytes(memory.purgeable))
                 }
                 Meter(footprint: fraction(memory.footprint, memory.total), other: fraction(otherUsed(memory), memory.total))
-                HStack(spacing: LuluTheme.Space.lg) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 135), alignment: .leading)], alignment: .leading, spacing: LuluTheme.Space.md) {
                     memoryLegend("Servidor", value: memory.footprint, color: Meter.serverColor)
                     memoryLegend("Outros processos", value: otherUsed(memory), color: Meter.otherColor)
                     memoryLegend("Disponível", value: memory.available, color: Meter.availableColor)
@@ -656,8 +660,8 @@ private struct SpeedPane: View {
                 .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(Color.primary.opacity(0.18)))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).foregroundStyle(.secondary)
-                Text(Format.bytes(value)).fontWeight(.medium)
+                Text(title).foregroundStyle(.secondary).lineLimit(1)
+                Text(Format.bytes(value)).font(.body.monospacedDigit().weight(.semibold))
             }
         }
         .accessibilityElement(children: .combine)
@@ -683,8 +687,8 @@ private struct SpeedPane: View {
 
 private struct Meter: View {
     static let serverColor = LuluTheme.accent
-    static let otherColor = Color.primary.opacity(0.28)
-    static let availableColor = Color.primary.opacity(0.08)
+    static let otherColor = LuluTheme.accent.opacity(0.38)
+    static let availableColor = LuluTheme.accent.opacity(0.10)
     var footprint: Double
     var other: Double
 
@@ -697,8 +701,8 @@ private struct Meter: View {
                 Rectangle().fill(Self.availableColor)
             }
         }
-        .frame(height: 10)
-        .clipShape(RoundedRectangle(cornerRadius: 4))
+        .frame(height: 14)
+        .clipShape(RoundedRectangle(cornerRadius: 7))
     }
 }
 
