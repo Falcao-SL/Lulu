@@ -73,7 +73,7 @@ cat << PLIST > "${APP_BUNDLE}/Contents/Info.plist"
     <key>SUFeedURL</key>
     <string>https://lulu.falcaosl.com/appcast-${ARCH}.xml</string>
     <key>SUEnableAutomaticChecks</key>
-    <true/>
+    <false/>
     <key>SUVerifyUpdateBeforeExtraction</key>
     <true/>
 </dict>

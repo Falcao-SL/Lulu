@@ -18,7 +18,11 @@ struct OverviewPane: View {
             VStack(alignment: .leading, spacing: Space.xl) {
                 LuluPageHeader("Overview", symbol: "square.grid.2x2")
                 session
+                #if canImport(Sparkle)
+                SparkleUpdateCard(model: model)
+                #else
                 updates
+                #endif
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 155), spacing: Space.md)], spacing: Space.md) {
                     LuluMetric("Available memory", value: model.memory.total == 0 ? "—" : Format.bytes(model.memory.available), symbol: "memorychip")
                     LuluMetric("Generation · tok/s", value: model.phase == .ready ? Format.rate(model.memory.predictRate) : "—", symbol: "bolt")
@@ -156,3 +160,32 @@ struct OverviewPane: View {
         }.buttonStyle(.plain)
     }
 }
+
+#if canImport(Sparkle)
+private struct SparkleUpdateCard: View {
+    @ObservedObject var model: AppModel
+    @ObservedObject private var updater = SparkleUpdates.shared
+
+    var body: some View {
+        HStack(spacing: LuluTheme.Space.md) {
+            LuluIcon("arrow.down.circle")
+            VStack(alignment: .leading, spacing: LuluTheme.Space.xs) {
+                Text(model.updateVersion.map { "Lulu \($0) is available" } ?? "Lulu \(AppUpdates.current)")
+                    .font(LuluTheme.TypeStyle.body.weight(.medium))
+                Text(updater.status ?? (model.updateVersion == nil ? "Check for a newer release." : "Install the latest version for this Mac."))
+                    .font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            if model.updateURL != nil {
+                Button("Install update") { model.downloadUpdate() }
+                    .buttonStyle(.borderedProminent).disabled(updater.busy)
+            } else {
+                Button(model.checkingUpdate ? "Checking…" : "Check for updates") { model.checkForUpdates(showFeedback: true) }
+                    .disabled(model.checkingUpdate || updater.busy)
+            }
+        }
+        .padding(LuluTheme.Space.lg)
+        .luluCard()
+    }
+}
+#endif
