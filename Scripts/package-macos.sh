@@ -18,12 +18,28 @@ else
   keychain="${LULU_SIGNING_KEYCHAIN:?Missing signing keychain}"
   sparkle="${APP}/Contents/Frameworks/Sparkle.framework"
   sign=(codesign --force --sign "$SIGNING_IDENTITY" --keychain "$keychain" --options runtime --timestamp)
-  "${sign[@]}" "$sparkle/Versions/B/XPCServices/Installer.xpc"
-  "${sign[@]}" --preserve-metadata=entitlements "$sparkle/Versions/B/XPCServices/Downloader.xpc"
-  "${sign[@]}" "$sparkle/Versions/B/Autoupdate"
-  "${sign[@]}" "$sparkle/Versions/B/Updater.app"
-  "${sign[@]}" "$sparkle"
-  "${sign[@]}" "$APP"
+  sign_item() {
+    local attempt=1
+    local max=5
+    while true; do
+      if "${sign[@]}" "$@"; then
+        return 0
+      fi
+      if (( attempt >= max )); then
+        echo "codesign failed after ${max} attempts: $*" >&2
+        return 1
+      fi
+      echo "codesign failed (attempt ${attempt}/${max}), retrying: $*" >&2
+      sleep $((attempt * 5))
+      attempt=$((attempt + 1))
+    done
+  }
+  sign_item "$sparkle/Versions/B/XPCServices/Installer.xpc"
+  sign_item --preserve-metadata=entitlements "$sparkle/Versions/B/XPCServices/Downloader.xpc"
+  sign_item "$sparkle/Versions/B/Autoupdate"
+  sign_item "$sparkle/Versions/B/Updater.app"
+  sign_item "$sparkle"
+  sign_item "$APP"
 fi
 codesign --verify --deep --strict --verbose=2 "${APP}"
 
