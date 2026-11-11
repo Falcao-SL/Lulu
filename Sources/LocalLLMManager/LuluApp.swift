@@ -529,6 +529,36 @@ private struct ServerPane: View {
             .padding(LuluTheme.Space.lg)
             .luluCard()
 
+            VStack(alignment: .leading, spacing: LuluTheme.Space.sm) {
+                LuluSectionHeader("Access key", symbol: "key")
+                Text("Clients send this key to the local server. llama.cpp enforces it; paste it into Cursor’s OpenAI API Key field.")
+                    .font(LuluTheme.TypeStyle.caption)
+                    .foregroundStyle(.secondary)
+                HStack(spacing: LuluTheme.Space.sm) {
+                    Group {
+                        if model.accessKeyVisible {
+                            Text(model.accessKey)
+                                .font(LuluTheme.TypeStyle.body.monospaced())
+                                .textSelection(.enabled)
+                                .lineLimit(2)
+                        } else {
+                            Text(accessKeyMask(model.accessKey))
+                                .font(LuluTheme.TypeStyle.body.monospaced())
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    Button(model.accessKeyVisible ? "Hide" : "Show") {
+                        model.accessKeyVisible.toggle()
+                    }
+                    Button(model.accessKeyCopied ? "Copied" : "Copy", luluSymbol: model.accessKeyCopied ? "checkmark" : "doc.on.doc") {
+                        model.copyAccessKey()
+                    }
+                    Button("Regenerate") { model.regenerateAccessKey() }
+                }
+            }
+            .padding(LuluTheme.Space.lg)
+            .luluCard()
+
             ClientRack(model: model)
 
             if !serverActive && model.models.isEmpty {
@@ -542,6 +572,11 @@ private struct ServerPane: View {
 
     private var selectedModel: ModelItem? {
         model.models.first { $0.id == model.selectedModelID }
+    }
+
+    private func accessKeyMask(_ key: String) -> String {
+        guard key.count > 8 else { return String(repeating: "•", count: max(key.count, 4)) }
+        return String(repeating: "•", count: key.count - 4) + String(key.suffix(4))
     }
 
     private var kvEstimate: UInt64? {

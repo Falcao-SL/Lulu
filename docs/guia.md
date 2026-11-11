@@ -14,7 +14,11 @@ Escolha um modelo antes de iniciar. O Lulu verifica se o motor correspondente es
 
 O llama.cpp usa flash attention, camadas na GPU e threads dos núcleos de desempenho. No MLX, o limite de KV depende do motor e dos metadados disponíveis. Contextos maiores podem consumir mais memória; comece com 4K ou 8K e acompanhe o uso.
 
-O status disponível indica que a verificação HTTP respondeu. Consulte os logs se o motor falhar ao carregar o modelo. A fileira **Usar neste Mac** grava o servidor local no OpenCode, Codex, Antigravity, Cursor, Claude Code, OpenClaude, DeepSeek Harness, Aider e Zed. Os outros provedores e chaves permanecem. Com o servidor disponível, o identificador é o que `/v1/models` devolve; com o servidor parado, é uma estimativa. Abra o programa de novo depois de configurar. O Codex usa `/v1/responses` e o Claude Code usa `/v1/messages`; o mlx-lm não oferece esses caminhos.
+O status disponível indica que a verificação HTTP respondeu. Consulte os logs se o motor falhar ao carregar o modelo.
+
+A chave de acesso fica em **Servidor**. O Lulu gera uma chave `lulu_…` no Keychain; **Mostrar**, **Copiar** e **Regenerar** controlam o valor. O llama.cpp exige essa chave (`--api-key`). Os clientes configurados pelo Lulu recebem a mesma chave.
+
+A fileira **Usar neste Mac** grava o servidor local no OpenCode, Codex, Antigravity, Cursor, Claude Code, OpenClaude, DeepSeek Harness, Aider e Zed. Os outros provedores e chaves permanecem. Com o servidor disponível, o identificador é o que `/v1/models` devolve; com o servidor parado, é uma estimativa. Abra o programa de novo depois de configurar. No Cursor, feche o app antes de configurar: o Lulu adiciona o nome do modelo em **Add Custom Model** (`userAddedModels`), aponta o Base URL e pede para colar a chave em OpenAI API Key. O Codex usa `/v1/responses` e o Claude Code usa `/v1/messages`; o mlx-lm não oferece esses caminhos.
 
 ## Entender as métricas
 

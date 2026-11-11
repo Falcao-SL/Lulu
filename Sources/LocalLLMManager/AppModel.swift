@@ -75,6 +75,9 @@ final class AppModel: ObservableObject {
     @Published var confirmDeleteModel: String?
     @Published var confirmPurge = false
     @Published var copied = false
+    @Published var accessKey = ""
+    @Published var accessKeyVisible = false
+    @Published var accessKeyCopied = false
     @Published var updateVersion: String?
     @Published var updateURL: URL?
     @Published var checkingUpdate = false
@@ -120,6 +123,7 @@ final class AppModel: ObservableObject {
         if storedPort > 0 { port = storedPort }
         jobs = DownloadStore.load()
         refreshTokenNote()
+        accessKey = AccessKeyStore.ensure()
         transfers.onEvent = { [weak self] event in
             Task { @MainActor in self?.handle(event) }
         }
@@ -455,7 +459,7 @@ final class AppModel: ObservableObject {
         case "mlx-vlm":
             arguments = ["--model", model.path, "--host", "127.0.0.1", "--port", String(port), "--max-kv-size", String(contextLength)]
         default:
-            arguments = ["-m", model.path, "--host", "127.0.0.1", "--port", String(port), "-ngl", "99", "-c", String(contextLength), "-t", String(cores), "-tb", String(cores), "--flash-attn", "on", "--metrics"]
+            arguments = ["-m", model.path, "--host", "127.0.0.1", "--port", String(port), "-ngl", "99", "-c", String(contextLength), "-t", String(cores), "-tb", String(cores), "--flash-attn", "on", "--metrics", "--api-key", AccessKeyStore.ensure()]
             if let projector = model.mmproj {
                 arguments += ["--mmproj", projector]
             }
@@ -542,9 +546,35 @@ final class AppModel: ObservableObject {
         }
     }
 
+    func copyAccessKey() {
+        let key = AccessKeyStore.ensure()
+        accessKey = key
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(key, forType: .string)
+        accessKeyCopied = true
+        Task {
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            accessKeyCopied = false
+        }
+    }
+
+    func regenerateAccessKey() {
+        accessKey = AccessKeyStore.regenerate()
+        accessKeyVisible = true
+        if phase == .ready || phase == .starting {
+            banner = "New access key saved. Restart the server so llama.cpp picks it up, then reconfigure clients."
+        } else {
+            banner = "New access key saved. Configure clients again after starting the server."
+        }
+    }
+
     func configure(_ client: ClientID) {
         guard let item = runningModel ?? models.first(where: { $0.id == selectedModelID }) else {
             banner = "Choose a model before configuring \(client.title)."
+            return
+        }
+        if client == .cursor, CursorProcess.isRunning {
+            banner = "Close Cursor completely, then configure again. Cursor overwrites its settings while open."
             return
         }
         let currentPort = port
@@ -553,12 +583,14 @@ final class AppModel: ObservableObject {
         let name = item.name
         let engineID = item.engineID
         let path = item.path
+        let apiKey = AccessKeyStore.ensure()
+        accessKey = apiKey
         Task {
             let live = await Probe.servedModelID(port: currentPort, path: path)
             let modelID = live ?? OpenCodeClient.fallbackID(engineID: engineID, path: path)
             let request = ClientRequest(
                 port: currentPort, modelID: modelID, displayName: name,
-                context: context, vision: vision, engineID: engineID, liveID: live != nil
+                context: context, vision: vision, engineID: engineID, liveID: live != nil, apiKey: apiKey
             )
             do {
                 configuredNotice = ClientNotice(client: client, detail: try ClientConfig.apply(client, request))
@@ -969,8 +1001,24 @@ private enum Probe {
 
     private static func get(_ port: Int, _ path: String) async -> (Int, Data)? {
         guard let url = URL(string: "http://127.0.0.1:\(port)\(path)") else { return nil }
-        guard let (data, response) = try? await session.data(from: url),
+        var request = URLRequest(url: url)
+        let key = AccessKeyStore.load().trimmingCharacters(in: .whitespacesAndNewlines)
+        if !key.isEmpty {
+            request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        }
+        guard let (data, response) = try? await session.data(for: request),
               let http = response as? HTTPURLResponse else { return nil }
         return (http.statusCode, data)
+    }
+}
+
+enum CursorProcess {
+    static var isRunning: Bool {
+        let running = NSRunningApplication.runningApplications(withBundleIdentifier: "com.todesktop.230313mzl4w4u92")
+        if !running.isEmpty { return true }
+        return !NSWorkspace.shared.runningApplications.filter {
+            ($0.bundleIdentifier?.localizedCaseInsensitiveContains("cursor") ?? false)
+                || (($0.localizedName ?? "").localizedCaseInsensitiveCompare("Cursor") == .orderedSame)
+        }.isEmpty
     }
 }

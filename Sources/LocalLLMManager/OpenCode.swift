@@ -7,7 +7,7 @@ enum OpenCodeClient {
         var errorDescription: String? { message }
     }
 
-    static func write(baseURL: String, displayName: String, modelID: String, context: Int, vision: Bool, directory: URL? = nil) throws {
+    static func write(baseURL: String, displayName: String, modelID: String, context: Int, vision: Bool, apiKey: String, directory: URL? = nil) throws {
         let directory = directory ?? FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".config/opencode", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -50,7 +50,7 @@ enum OpenCodeClient {
         providers["lulu"] = [
             "name": "Lulu",
             "package": "@opencode/ai/providers/openai-compatible",
-            "settings": ["baseURL": baseURL],
+            "settings": ["baseURL": baseURL, "apiKey": apiKey],
             "models": ["local": model],
         ] as [String: Any]
         root["providers"] = providers

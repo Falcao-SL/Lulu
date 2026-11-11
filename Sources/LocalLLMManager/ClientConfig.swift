@@ -35,6 +35,7 @@ struct ClientRequest {
     var vision: Bool
     var engineID: String
     var liveID: Bool
+    var apiKey: String
 
     var baseURL: String { "http://127.0.0.1:\(port)/v1" }
     var origin: String { "http://127.0.0.1:\(port)" }
@@ -67,6 +68,7 @@ enum ClientConfig {
                 modelID: request.modelID,
                 context: request.context,
                 vision: request.vision,
+                apiKey: request.apiKey,
                 directory: roots.file(".config", "opencode")
             )
         case .codex:
@@ -101,7 +103,7 @@ enum ClientConfig {
         case .agy:
             return "Antigravity now uses \(name) at \(request.origin).\(estimate) Open a new terminal to load the gateway."
         case .cursor:
-            return "Cursor now points to \(request.baseURL) with \(name).\(estimate) Restart Cursor. If it asks for an OpenAI key, use lulu."
+            return "Cursor lists \(name) and points to \(request.baseURL).\(estimate) Close Cursor before configuring. Paste this access key under Models → OpenAI API Key: \(request.apiKey). Then restart Cursor and pick \(name)."
         case .claude:
             let protocolNote = request.engineID == "mlx-lm" ? " Claude Code uses /v1/messages, which mlx-lm does not support." : ""
             return "Claude Code now uses \(name) at \(request.origin).\(estimate)\(protocolNote) Open a new session."
@@ -137,7 +139,7 @@ enum ClientConfig {
         base_url = \(tomlString(request.baseURL))
         wire_api = "responses"
         requires_openai_auth = false
-        experimental_bearer_token = "lulu"
+        experimental_bearer_token = \(tomlString(request.apiKey))
         """
         text = replaceTomlTable(text, header: "[model_providers.lulu]", with: block)
         try Data(text.utf8).write(to: file, options: .atomic)
@@ -181,7 +183,7 @@ enum ClientConfig {
         let block = """
         # >>> lulu agy >>>
         export AGY_LLM_GATEWAY_URL=\(shellQuote(request.origin))
-        export AGY_LLM_GATEWAY_API_KEY=lulu
+        export AGY_LLM_GATEWAY_API_KEY=\(shellQuote(request.apiKey))
         export AGY_LLM_GATEWAY_WIRE_PROTOCOL=openai
         export AGY_LLM_GATEWAY_MODELS=\(shellQuote(request.modelID))
         # <<< lulu agy <<<
@@ -206,39 +208,46 @@ enum ClientConfig {
     }
 
     private static func rewriteCursor(_ raw: String, _ request: ClientRequest) throws -> String {
-        var text = raw
-        let quotedURL = jsonString(request.baseURL)
-        let quotedModel = jsonString(request.modelID)
-        if let range = text.range(of: "\"openAIBaseUrl\":null") {
-            text.replaceSubrange(range, with: "\"openAIBaseUrl\":\(quotedURL)")
-        } else if !replaceJSONStringField(&text, key: "openAIBaseUrl", value: quotedURL, after: text.startIndex) {
-            throw Failure(message: "Could not find the OpenAI address in Cursor configuration.")
+        guard let data = raw.data(using: .utf8),
+              var root = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw Failure(message: "Cursor configuration is not valid JSON.")
         }
-        text = text.replacingOccurrences(of: "\"useOpenAIKey\":false", with: "\"useOpenAIKey\":true")
-        let marker = "\"composer\":{\"modelName\":"
-        guard let composer = text.range(of: marker) else {
+        let listed = request.displayName
+        root["openAIBaseUrl"] = request.baseURL
+        root["useOpenAIKey"] = true
+
+        var ai = root["aiSettings"] as? [String: Any] ?? [:]
+        var added = ai["userAddedModels"] as? [String] ?? []
+        if !added.contains(listed) { added.append(listed) }
+        ai["userAddedModels"] = added
+
+        var enabled = ai["modelOverrideEnabled"] as? [String] ?? []
+        if !enabled.contains(listed) { enabled.append(listed) }
+        ai["modelOverrideEnabled"] = enabled
+
+        if var disabled = ai["modelOverrideDisabled"] as? [String] {
+            disabled.removeAll { $0 == listed }
+            ai["modelOverrideDisabled"] = disabled
+        }
+
+        var modelConfig = ai["modelConfig"] as? [String: Any] ?? [:]
+        if var composer = modelConfig["composer"] as? [String: Any] {
+            composer["modelName"] = listed
+            if var selected = composer["selectedModels"] as? [[String: Any]], !selected.isEmpty {
+                selected[0]["modelId"] = listed
+                composer["selectedModels"] = selected
+            } else {
+                composer["selectedModels"] = [["modelId": listed, "parameters": []]]
+            }
+            modelConfig["composer"] = composer
+            ai["modelConfig"] = modelConfig
+        } else {
             throw Failure(message: "Could not find the Cursor model to replace.")
         }
-        guard replaceJSONStringField(&text, key: "modelName", value: quotedModel, after: composer.lowerBound),
-              replaceJSONStringField(&text, key: "modelId", value: quotedModel, after: composer.lowerBound) else {
-            throw Failure(message: "Could not change the selected Cursor model.")
-        }
-        if !text.contains("\"name\":\(quotedModel)") {
-            let listKey = "\"availableDefaultModels2\":["
-            guard let list = text.range(of: listKey) else {
-                throw Failure(message: "Could not find the Cursor model list.")
-            }
-            let entry = cursorModel(request, quotedModel: quotedModel)
-            let next = text[list.upperBound...].first
-            let insertion = next == "]" ? entry : entry + ","
-            text.insert(contentsOf: insertion, at: list.upperBound)
-        }
-        return text
-    }
+        root["aiSettings"] = ai
 
-    private static func cursorModel(_ request: ClientRequest, quotedModel: String) -> String {
-        let name = jsonString(request.displayName)
-        return "{\"name\":\(quotedModel),\"defaultOn\":false,\"supportsAgent\":true,\"supportsImages\":\(request.vision ? "true" : "false"),\"clientDisplayName\":\(name),\"serverModelName\":\(quotedModel),\"supportsNonMaxMode\":true,\"inputboxShortModelName\":\(name)}"
+        let out = try JSONSerialization.data(withJSONObject: root)
+        return String(decoding: out, as: UTF8.self)
     }
 
     private static func writeClaude(_ request: ClientRequest, file: URL) throws {
@@ -253,7 +262,7 @@ enum ClientConfig {
         }
         var env = root["env"] as? [String: Any] ?? [:]
         env["ANTHROPIC_BASE_URL"] = request.origin
-        env["ANTHROPIC_AUTH_TOKEN"] = "lulu"
+        env["ANTHROPIC_AUTH_TOKEN"] = request.apiKey
         env["ANTHROPIC_MODEL"] = request.modelID
         env["CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC"] = "1"
         root["env"] = env
@@ -273,7 +282,7 @@ enum ClientConfig {
         var env = root["env"] as? [String: Any] ?? [:]
         env["CLAUDE_CODE_USE_OPENAI"] = "1"
         env["OPENAI_BASE_URL"] = request.baseURL
-        env["OPENAI_API_KEY"] = "lulu"
+        env["OPENAI_API_KEY"] = request.apiKey
         env["OPENAI_MODEL"] = request.modelID
         root["env"] = env
         root["model"] = request.modelID
@@ -310,18 +319,21 @@ enum ClientConfig {
         try replaceMarkedBlock(in: patch, start: "# >>> lulu >>>", end: "# <<< lulu <<<", block: block)
         let env = roots.file(".dsh", ".env")
         var envText = (try? String(contentsOf: env, encoding: .utf8)) ?? ""
-        if !envText.contains("LULU_API_KEY=") {
+        let line = "LULU_API_KEY=\(request.apiKey)"
+        if envText.range(of: #"(?m)^LULU_API_KEY=.*$"#, options: .regularExpression) != nil {
+            envText = envText.replacingOccurrences(of: #"(?m)^LULU_API_KEY=.*$"#, with: line, options: .regularExpression)
+        } else {
             if !envText.isEmpty, !envText.hasSuffix("\n") { envText.append("\n") }
-            envText += "LULU_API_KEY=lulu\n"
-            try Data(envText.utf8).write(to: env, options: .atomic)
+            envText += line + "\n"
         }
+        try Data(envText.utf8).write(to: env, options: .atomic)
     }
 
     private static func writeAider(_ request: ClientRequest, file: URL) throws {
         var lines = ((try? String(contentsOf: file, encoding: .utf8)) ?? "").components(separatedBy: "\n")
         let updates = [
             "openai-api-base": yamlString(request.baseURL),
-            "openai-api-key": yamlString("lulu"),
+            "openai-api-key": yamlString(request.apiKey),
             "model": yamlString("openai/" + request.modelID),
         ]
         for (key, value) in updates {
@@ -350,7 +362,7 @@ enum ClientConfig {
         var languages = root["language_models"] as? [String: Any] ?? [:]
         var openai = languages["openai"] as? [String: Any] ?? [:]
         openai["api_url"] = request.baseURL
-        if openai["api_key"] == nil { openai["api_key"] = "lulu" }
+        openai["api_key"] = request.apiKey
         var models = openai["available_models"] as? [[String: Any]] ?? []
         models.removeAll { ($0["name"] as? String) == request.modelID || ($0["name"] as? String) == "lulu" }
         models.insert([
@@ -385,27 +397,6 @@ enum ClientConfig {
         try Data(text.utf8).write(to: file, options: .atomic)
     }
 
-    private static func replaceJSONStringField(_ text: inout String, key: String, value quoted: String, after: String.Index) -> Bool {
-        let needle = "\"\(key)\":"
-        guard let keyRange = text.range(of: needle, range: after..<text.endIndex) else { return false }
-        var index = keyRange.upperBound
-        while index < text.endIndex, text[index].isWhitespace { index = text.index(after: index) }
-        guard index < text.endIndex, text[index] == "\"" else { return false }
-        var cursor = text.index(after: index)
-        while cursor < text.endIndex {
-            if text[cursor] == "\\", text.index(after: cursor) < text.endIndex {
-                cursor = text.index(cursor, offsetBy: 2, limitedBy: text.endIndex) ?? text.endIndex
-                continue
-            }
-            if text[cursor] == "\"" {
-                text.replaceSubrange(index...cursor, with: quoted)
-                return true
-            }
-            cursor = text.index(after: cursor)
-        }
-        return false
-    }
-
     private static func sqliteText(_ db: OpaquePointer?, _ sql: String, _ key: String) throws -> String {
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
@@ -435,12 +426,6 @@ enum ClientConfig {
     private static func bind(_ statement: OpaquePointer?, _ index: Int32, _ value: String) {
         let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
         _ = value.withCString { sqlite3_bind_text(statement, index, $0, -1, transient) }
-    }
-
-    private static func jsonString(_ value: String) -> String {
-        guard let data = try? JSONSerialization.data(withJSONObject: [value]),
-              let text = String(data: data, encoding: .utf8), text.count >= 2 else { return "\"\"" }
-        return String(text.dropFirst().dropLast())
     }
 
     private static func tomlString(_ value: String) -> String {
