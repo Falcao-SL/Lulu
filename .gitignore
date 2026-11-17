@@ -4,3 +4,8 @@ build/
 dist/
 *.app
 .llm-ctl-*
+
+# Lixo local e artefatos gerados
+*.profraw
+*.profdata
+xcuserdata/
