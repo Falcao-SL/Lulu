@@ -26,7 +26,7 @@
 <meta name="twitter:description" content="A small native Mac app to manage MLX and llama.cpp engines, models and a local OpenAI-compatible API. Free, MIT.">
 <meta name="twitter:image" content="https://lulu.falcaosl.com/og-image.png">
 <link rel="icon" href="icon.png">
-<link rel="stylesheet" href="style.css?v=20261116b">
+<link rel="stylesheet" href="style.css?v=20261117">
 <script src="release.js?v=20261116" defer></script>
 <script type="application/ld+json">
 {
@@ -86,6 +86,7 @@
   <a class="brand" href="#content"><img src="icon.png" width="28" height="28" alt="">Lulu</a>
   <nav class="nav-links">
     <a class="nav-link" href="#features">Features</a>
+    <a class="nav-link" href="#opencode">OpenCode guide</a>
     <a class="nav-link" href="#compare">Compare</a>
     <a class="nav-link" href="#faq">FAQ</a>
     <a class="nav-link" href="https://github.com/Falcao-SL/Lulu#readme">Docs ↗</a>
@@ -150,7 +151,7 @@
     <video controls preload="metadata" poster="screens/tour-poster.jpg" width="1280" height="820">
       <source src="screens/tour.mp4" type="video/mp4">
     </video>
-    <figcaption>The five screens, in order, on this Mac. No model is loaded, so this is the interface, not a generation. A clip of download, start, and a reply in Cursor needs a model on disk, and this Mac has none in ~/models.</figcaption>
+    <figcaption>Lulu’s five screens with the server stopped and no model loaded.</figcaption>
   </figure>
 </section>
 
@@ -170,6 +171,18 @@
   <div class="names"><span>OpenCode</span><span>Cursor</span><span>Codex</span><span>Claude Code</span><span>Aider</span><span>Zed</span><span>Antigravity</span><span>OpenClaude</span><span>DeepSeek</span></div>
   <p class="endpoint">Base URL: http://127.0.0.1:8000/v1<br>API key: lulu_••••••••</p>
   <p class="fine">Codex uses <code>/v1/responses</code> and Claude Code uses <code>/v1/messages</code>. mlx-lm does not serve those routes. The names above are the clients Lulu can configure. Their logos are not shown here.</p>
+</section>
+
+<section class="block wrap tutorial" id="opencode">
+  <div class="tutorial-heading"><div><p class="eyebrow">PRACTICAL GUIDE · LULU + OPENCODE</p><h2>Your first model, <em>in the terminal.</em></h2></div><p>Run LFM3-Omni-2B through Lulu’s local server. This path uses the GGUF model and llama.cpp.</p></div>
+  <ol class="guide-steps">
+    <li><span>01</span><div><h3>Prepare the engine</h3><p>Install Lulu and <a href="https://opencode.ai/docs/">OpenCode</a>. In <strong>Engines</strong>, install <strong>llama.cpp</strong>; Lulu needs Homebrew for this. Use a recent engine version with LFM3-Omni support.</p></div></li>
+    <li><span>02</span><div><h3>Download the model</h3><p>In <strong>Models</strong>, search for <a href="https://huggingface.co/LiquidAI/LFM3-Omni-2B-GGUF">LiquidAI/LFM3-Omni-2B-GGUF</a>. Select the <code>Q4_K_M</code> quantization and check that the <code>mmproj</code> file is selected too. Start the download and wait for it to finish.</p></div></li>
+    <li><span>03</span><div><h3>Start the server</h3><p>In <strong>Server</strong>, select the downloaded model, start with a moderate context (for example, 8K), and click <strong>Start server</strong>. Wait until it is ready; the default port is 8000.</p></div></li>
+    <li><span>04</span><div><h3>Connect OpenCode</h3><p>On the same screen, configure <strong>OpenCode</strong> in the clients section. Lulu writes the endpoint, key and model to <code>~/.config/opencode/opencode.json</code> (or an existing JSONC file) and makes it the default. Restart OpenCode and run <code>opencode</code> in your project directory.</p></div></li>
+    <li><span>05</span><div><h3>Test and adjust</h3><p>Ask for a small task, such as explaining a file. If it fails, check the server log, port, key and selected model; configure the client again after changing the key or model. If JSONC contains comments, Lulu may not be able to edit it: back it up and remove comments before retrying.</p></div></li>
+  </ol>
+  <div class="guide-note"><strong>Compatibility</strong><p>The model is multimodal, but audio, video and tool calls are not guaranteed to work across every llama.cpp and OpenCode combination. This guide focuses on text; agent behavior and coding quality vary. The full integration has not been tested on this Mac.</p><p>Sources: <a href="https://huggingface.co/LiquidAI/LFM3-Omni-2B-GGUF">model and manufacturer instructions</a> · <a href="https://opencode.ai/docs/providers/">OpenCode providers</a>.</p></div>
 </section>
 
 <section class="block wrap" id="catalog">
