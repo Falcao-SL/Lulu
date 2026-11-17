@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f6f8f2">
+<title>Lulu privacy</title>
+<meta name="description" content="Lulu keeps models, logs and keys on your Mac. No analytics and no crash reporter. Network use is search, downloads, engine installs and a manual update check.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://lulu.falcaosl.com/privacy.html">
+<link rel="alternate" hreflang="en" href="https://lulu.falcaosl.com/privacy.html">
+<link rel="alternate" hreflang="pt-BR" href="https://lulu.falcaosl.com/privacy.pt.html">
+<link rel="alternate" hreflang="x-default" href="https://lulu.falcaosl.com/privacy.html">
+<meta property="og:title" content="Lulu privacy">
+<meta property="og:description" content="What Lulu stores on your Mac, and when it uses the network.">
+<meta property="og:url" content="https://lulu.falcaosl.com/privacy.html">
+<meta property="og:image" content="https://lulu.falcaosl.com/og-image.png">
+<meta property="og:type" content="article">
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="style.css?v=20261116b">
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="nav wrap">
+  <a class="brand" href="index.html"><img src="icon.png" width="28" height="28" alt="">Lulu</a>
+  <nav class="nav-links"><a class="nav-link" href="privacy.pt.html" hreflang="pt-BR" lang="pt-BR">PT</a><a class="nav-link" href="index.html">Home</a></nav>
+</header>
+<main class="privacy-main wrap" id="content">
+  <p class="eyebrow">PRIVACY</p>
+  <h1>What stays on this Mac.</h1>
+  <p>Effective 16 November 2026. This covers the Lulu macOS app from Falcao SL. Questions: <a href="mailto:dev@falcaosl.com">dev@falcaosl.com</a>.</p>
+  <h2>On this Mac</h2>
+  <ul>
+    <li>Models in <code>~/models/mlx</code> and <code>~/models/gguf</code>.</li>
+    <li>Session data and logs in <code>~/.lulu/</code>.</li>
+    <li>An optional Hugging Face token, and the local server key, in macOS Keychain.</li>
+  </ul>
+  <h2>The local server</h2>
+  <p>The server listens on 127.0.0.1 only. Prompts and responses for that server stay on the Mac. llama.cpp is started with the Keychain key. mlx-lm and mlx-vlm are started without that flag. Clients that Lulu configures receive the same key.</p>
+  <h2>When the network is used</h2>
+  <ul>
+    <li>Searching and downloading models talks to Hugging Face.</li>
+    <li>Installing an engine uses Homebrew or uv, or opens the publisher's own download.</li>
+    <li>Check for updates, which you start from Overview, asks GitHub for the latest release. Installing that release uses Sparkle and the signed appcast on this site.</li>
+  </ul>
+  <p>There is no analytics SDK and no crash reporter in the app. Sparkle is set with automatic checks off and system-profile sending off. Lulu does not ask you to create an account.</p>
+  <h2>This website</h2>
+  <p>lulu.falcaosl.com is a static site. It does not set a tracking cookie and it does not load an analytics script. Downloads go to GitHub Releases.</p>
+  <p><a href="index.html">Back to Lulu</a></p>
+</main>
+<footer class="wrap footer">
+  <a href="https://falcaosl.com/">Falcao SL</a>
+  <span>Made with care in Fortaleza, Brazil.</span>
+  <a href="mailto:dev@falcaosl.com">dev@falcaosl.com</a>
+</footer>
+</body>
+</html>

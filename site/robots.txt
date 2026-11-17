@@ -1,3 +1,40 @@
+# Lulu publishes llms.txt for assistants that cite this site.
+# Training is not requested. Search and answers that quote the page are.
+# If Cloudflare prepends a managed block that Disallows these bots, that
+# block overrides this file until AI Crawl Control is changed for the zone.
+
 User-agent: *
+Content-Signal: search=yes,ai-input=yes,ai-train=no
 Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
 Sitemap: https://lulu.falcaosl.com/sitemap.xml
