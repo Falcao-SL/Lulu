@@ -26,8 +26,9 @@
 <meta name="twitter:description" content="Um app nativo e pequeno para Mac. Motores MLX e llama.cpp, modelos e uma API local compatível com a OpenAI. Grátis, MIT.">
 <meta name="twitter:image" content="https://lulu.falcaosl.com/og-image.png">
 <link rel="icon" href="icon.png">
-<link rel="stylesheet" href="style.css?v=20261117">
+<link rel="stylesheet" href="style.css?v=20261118">
 <script src="release.js?v=20261116" defer></script>
+<script src="product-preview.js?v=1" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -76,23 +77,21 @@
 <main id="content">
 <section class="hero wrap">
   <div class="hero-copy">
-    <p class="eyebrow"><span class="dot"></span> IA LOCAL LEVE PARA MAC</p>
-    <h1>Rode modelos locais.<br><em>Sem app pesado.</em></h1>
-    <p class="trust">Grátis · MIT · 3,1 MB · notarizado</p>
-    <p class="intro">O Lulu é um app nativo para Mac, de 3,1 MB. Ele instala os motores de inferência, organiza modelos MLX e GGUF e os serve em uma API compatível com a OpenAI. O app não tem chat.</p>
+    <p class="eyebrow">GRÁTIS · CÓDIGO ABERTO · MACOS</p>
+    <h1>Seu Mac.<br><em>Sua IA local.</em></h1>
+    
+    <p class="intro">Instale motores, organize modelos e conecte suas ferramentas a uma API local. Tudo em um app nativo para Mac.</p>
     <div class="actions">
       <a class="button primary" id="download" data-arch="arm" href="https://github.com/Falcao-SL/Lulu/releases/latest/download/Lulu-macos-arm64.dmg"><img class="platform-logo" src="apple.svg" width="20" height="20" alt=""> Baixar para Apple Silicon</a>
       <a class="button secondary" id="download-intel" data-arch="intel" href="https://github.com/Falcao-SL/Lulu/releases/latest/download/Lulu-macos-x86_64.dmg"><img class="platform-logo intel-logo" src="intel.svg" width="28" height="20" alt=""> Baixar para Mac Intel</a>
     </div>
-    <p class="requirement">Apple Silicon 3,1 MB · Intel 3,2 MB · macOS 14 ou mais recente · <span class="js-tag">v2.0.21</span></p>
+    <a class="watch-link" href="#video">Veja como começar <span aria-hidden="true">↓</span></a><p class="requirement">Apple Silicon 3,1 MB · Intel 3,2 MB · macOS 14 ou mais recente · <span class="js-tag">v2.0.21</span></p>
   </div>
-  <figure class="shot">
-    <picture>
-      <source srcset="screens/overview.webp" type="image/webp">
-      <img src="screens/overview.png" width="2560" height="1640" alt="Overview do Lulu 2.0.21 no Mac. O servidor local está parado e nenhum modelo está carregado.">
-    </picture>
-    <figcaption>Lulu 2.0.21 em um Apple M4 com 24 GB, macOS 27.2.1, 16 de novembro de 2026. Nenhum modelo carregado. A linha de memória é deste Mac, não um benchmark.</figcaption>
-  </figure>
+  <div class="product-preview" aria-label="Conheça as telas do Lulu">
+    <div class="preview-tabs" role="group" aria-label="Conheça as telas do Lulu"><button type="button" data-screen="overview" aria-pressed="true">Visão geral</button><button type="button" data-screen="engines" aria-pressed="false">Motores</button><button type="button" data-screen="models" aria-pressed="false">Modelos</button><button type="button" data-screen="server" aria-pressed="false">Servidor</button></div>
+    <figure class="shot preview-screen"><picture><source id="preview-source" srcset="screens/overview.webp" type="image/webp"><img id="preview-image" src="screens/overview.png" width="2560" height="1640" alt="Conheça as telas do Lulu"></picture></figure>
+    <p class="preview-note">Imagens reais do Lulu, com o servidor parado e nenhum modelo carregado.</p>
+  </div>
 </section>
 
 <p class="proof wrap"><span>Download de 3,1 MB</span><span>App nativo em Swift</span><span>Código aberto, MIT</span><span>Notarizado pela Apple</span><span>Apple Silicon e Intel</span></p>
@@ -126,11 +125,12 @@
       <figcaption><strong>3. Inicie o servidor.</strong> Escolha modelo, contexto e porta. Copie <code>http://127.0.0.1:8000/v1</code> ou deixe o Lulu configurar as ferramentas.</figcaption>
     </figure>
   </div>
-  <figure class="shot" style="margin-top:28px">
-    <video controls preload="metadata" poster="screens/tour-poster.jpg" width="1280" height="820">
-      <source src="screens/tour.mp4" type="video/mp4">
+  <div class="video-intro" id="video"><p class="eyebrow">VÍDEO · PRIMEIROS PASSOS</p><h3>Do modelo ao seu primeiro servidor.</h3><p>Veja o caminho para começar com o Lulu.</p></div>
+  <figure class="shot video-shot">
+    <video controls preload="none" poster="screens/lulu-comecar-poster.jpg" width="1280" height="820">
+      <source src="screens/lulu-comecar.mp4" type="video/mp4">
     </video>
-    <figcaption>As cinco telas do Lulu, com o servidor parado e nenhum modelo carregado.</figcaption>
+    <figcaption>Um guia visual com telas do Lulu. O vídeo usa imagens estáticas do aplicativo e não mostra uma instalação executada.</figcaption>
   </figure>
 </section>
 

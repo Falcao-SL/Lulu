@@ -26,8 +26,9 @@
 <meta name="twitter:description" content="A small native Mac app to manage MLX and llama.cpp engines, models and a local OpenAI-compatible API. Free, MIT.">
 <meta name="twitter:image" content="https://lulu.falcaosl.com/og-image.png">
 <link rel="icon" href="icon.png">
-<link rel="stylesheet" href="style.css?v=20261117">
+<link rel="stylesheet" href="style.css?v=20261118">
 <script src="release.js?v=20261116" defer></script>
+<script src="product-preview.js?v=1" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -97,23 +98,21 @@
 <main id="content">
 <section class="hero wrap">
   <div class="hero-copy">
-    <p class="eyebrow"><span class="dot"></span> LIGHTWEIGHT LOCAL AI FOR MAC</p>
-    <h1>Run local models.<br><em>Skip the heavy app.</em></h1>
-    <p class="trust">Free · MIT · 3.1 MB · notarized</p>
+    <p class="eyebrow">FREE · OPEN SOURCE · MACOS</p>
+    <h1>Your Mac.<br><em>Your local AI.</em></h1>
+    
     <p class="intro">Lulu is a 3.1 MB native Mac app. It installs inference engines, manages MLX and GGUF models, and serves them on an OpenAI-compatible API. There is no chat in the app.</p>
     <div class="actions">
       <a class="button primary" id="download" data-arch="arm" href="https://github.com/Falcao-SL/Lulu/releases/latest/download/Lulu-macos-arm64.dmg"><img class="platform-logo" src="apple.svg" width="20" height="20" alt=""> Download for Apple Silicon</a>
       <a class="button secondary" id="download-intel" data-arch="intel" href="https://github.com/Falcao-SL/Lulu/releases/latest/download/Lulu-macos-x86_64.dmg"><img class="platform-logo intel-logo" src="intel.svg" width="28" height="20" alt=""> Download for Intel Mac</a>
     </div>
-    <p class="requirement">Apple Silicon 3.1 MB · Intel 3.2 MB · macOS 14 or later · <span class="js-tag">v2.0.21</span></p>
+    <a class="watch-link" href="#video">See how to get started <span aria-hidden="true">↓</span></a><p class="requirement">Apple Silicon 3.1 MB · Intel 3.2 MB · macOS 14 or later · <span class="js-tag">v2.0.21</span></p>
   </div>
-  <figure class="shot">
-    <picture>
-      <source srcset="screens/overview.webp" type="image/webp">
-      <img src="screens/overview.png" width="2560" height="1640" alt="Lulu 2.0.21 Overview on a Mac. The local server is stopped and no model is loaded.">
-    </picture>
-    <figcaption>Lulu 2.0.21 on an Apple M4 with 24 GB, macOS 27.2.1, 16 Nov 2026. No model loaded. The memory line is this Mac, not a benchmark.</figcaption>
-  </figure>
+  <div class="product-preview" aria-label="Explore Lulu screens">
+    <div class="preview-tabs" role="group" aria-label="Explore Lulu screens"><button type="button" data-screen="overview" aria-pressed="true">Overview</button><button type="button" data-screen="engines" aria-pressed="false">Engines</button><button type="button" data-screen="models" aria-pressed="false">Models</button><button type="button" data-screen="server" aria-pressed="false">Server</button></div>
+    <figure class="shot preview-screen"><picture><source id="preview-source" srcset="screens/overview.webp" type="image/webp"><img id="preview-image" src="screens/overview.png" width="2560" height="1640" alt="Explore Lulu screens"></picture></figure>
+    <p class="preview-note">Real Lulu screens, with the server stopped and no model loaded.</p>
+  </div>
 </section>
 
 <p class="proof wrap"><span>3.1 MB download</span><span>Native Swift app</span><span>MIT open source</span><span>Notarized by Apple</span><span>Apple Silicon and Intel</span></p>
@@ -147,11 +146,12 @@
       <figcaption><strong>3. Start the server.</strong> Choose a model, context and port. Copy <code>http://127.0.0.1:8000/v1</code> or let Lulu configure your tools.</figcaption>
     </figure>
   </div>
-  <figure class="shot" style="margin-top:28px">
-    <video controls preload="metadata" poster="screens/tour-poster.jpg" width="1280" height="820">
-      <source src="screens/tour.mp4" type="video/mp4">
+  <div class="video-intro" id="video"><p class="eyebrow">VIDEO · GETTING STARTED</p><h3>From a model to your first server.</h3><p>See how to get started with Lulu. Video text is in Portuguese.</p></div>
+  <figure class="shot video-shot">
+    <video controls preload="none" poster="screens/lulu-comecar-poster.jpg" width="1280" height="820">
+      <source src="screens/lulu-comecar.mp4" type="video/mp4">
     </video>
-    <figcaption>Lulu’s five screens with the server stopped and no model loaded.</figcaption>
+    <figcaption>A visual guide using still images of Lulu; it does not show a recorded installation.</figcaption>
   </figure>
 </section>
 
