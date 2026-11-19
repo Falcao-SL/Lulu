@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "historyId": "e3ec7fdd-253a-4fdb-9dec-421abf46ee55",
+  "currentRevision": "66ea28ed-cce0-4e0d-aab1-7fc40fe325bf",
+  "pendingChanges": false,
+  "files": {
+    "AGENTS.md": {
+      "hash": "26e43c63a41e1ba38ba287bea1af2795c55ba2e3787d3a635c062c3a8a9818f4",
+      "content": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/26/26e43c63a41e1ba38ba287bea1af2795c55ba2e3787d3a635c062c3a8a9818f4"
+    },
+    "CLAUDE.md": {
+      "hash": "26e43c63a41e1ba38ba287bea1af2795c55ba2e3787d3a635c062c3a8a9818f4",
+      "content": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/26/26e43c63a41e1ba38ba287bea1af2795c55ba2e3787d3a635c062c3a8a9818f4"
+    },
+    "SPEC.md": {
+      "hash": "e2cbb0451bdb77c9854d4b5248478f86c6db18033e169712c655ce87e9162a0e",
+      "content": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/e2/e2cbb0451bdb77c9854d4b5248478f86c6db18033e169712c655ce87e9162a0e"
+    },
+    "STORYLINES.md": {
+      "hash": "7c0434edf842f5b0adee3f6cf307a8e0499fb955e7127b4d99b1039104687071",
+      "content": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/7c/7c0434edf842f5b0adee3f6cf307a8e0499fb955e7127b4d99b1039104687071"
+    },
+    "assets/engines.webp": {
+      "hash": "a5849714480b743adf85a148fc44c5dd9e13e0bcd84c4c613f7b9ffc2ee5cd13",
+      "content": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/a5/a5849714480b743adf85a148fc44c5dd9e13e0bcd84c4c613f7b9ffc2ee5cd13"
+    },
+    "assets/gsap.min.js": {
+      "hash": "92bb9a96476f983d212a2bc4f54c889039c1696dd4461d40a736860938570fbb",
+      "content": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/92/92bb9a96476f983d212a2bc4f54c889039c1696dd4461d40a736860938570fbb"
+    },
+    "assets/models.webp": {
+      "hash": "4933d35d8ebecdf6208af3c6a596e4ded0887b1e8d29c7ff92e2e97dc378d28d",
+      "content": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/49/4933d35d8ebecdf6208af3c6a596e4ded0887b1e8d29c7ff92e2e97dc378d28d"
+    },
+    "assets/overview.webp": {
+      "hash": "091de40a7fca1c84d80ff8eef9cb677cbbf95b467d65eca774bb46b17ce06514",
+      "content": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/09/091de40a7fca1c84d80ff8eef9cb677cbbf95b467d65eca774bb46b17ce06514"
+    },
+    "assets/server.webp": {
+      "hash": "a364768736f91f66551f61d1e326bf97ba54dcab4b9aad7777343882e78399f9",
+      "content": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/a3/a364768736f91f66551f61d1e326bf97ba54dcab4b9aad7777343882e78399f9"
+    },
+    "hyperframes.json": {
+      "hash": "53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50",
+      "content": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/53/53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50"
+    },
+    "index.html": {
+      "hash": "b7532e7eb9e3f3661dd69ce768ea8969c5bbb88d7a5c1d2ca5a0abb39893b890",
+      "content": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/b7/b7532e7eb9e3f3661dd69ce768ea8969c5bbb88d7a5c1d2ca5a0abb39893b890"
+    },
+    "meta.json": {
+      "hash": "84cd5ca933031054dcb25fcd606330b78e8bf65b8d2de042040b8dc12c443413",
+      "content": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/84/84cd5ca933031054dcb25fcd606330b78e8bf65b8d2de042040b8dc12c443413"
+    },
+    "package.json": {
+      "hash": "918c978fdf96a200fe51802b859d3a7af2219184f7d463bab1c2ea765ed4d313",
+      "content": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/91/918c978fdf96a200fe51802b859d3a7af2219184f7d463bab1c2ea765ed4d313"
+    }
+  },
+  "revisions": {
+    "66ea28ed-cce0-4e0d-aab1-7fc40fe325bf": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1795043015955,
+      "endedAt": 1795043015960,
+      "files": {
+        "index.html": {
+          "before": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/5f/5fa2325c73ca90ff7857aca0b13debae837214b032ff3eb48ef15a57b370119a",
+          "after": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/b7/b7532e7eb9e3f3661dd69ce768ea8969c5bbb88d7a5c1d2ca5a0abb39893b890"
+        },
+        "SPEC.md": {
+          "before": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/93/939ad9a523b517f6915d660d5a9c105eb609b2716642e4b56c5b6ca8b613abee",
+          "after": "/Users/iramarfalcao/.cache/hyperframes/history/e3ec7fdd-253a-4fdb-9dec-421abf46ee55/blobs/e2/e2cbb0451bdb77c9854d4b5248478f86c6db18033e169712c655ce87e9162a0e"
+        }
+      }
+    }
+  },
+  "checks": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "snapshots": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "renders": {
+    "latest": {
+      "id": "9291eaa5-eeee-4025-b270-7af19191354d",
+      "completedAt": 1795043023197,
+      "output": "/Users/iramarfalcao/Github/Falcao-SL/Lulu/site/screens/lulu-comecar.mp4",
+      "status": "completed",
+      "revision": "66ea28ed-cce0-4e0d-aab1-7fc40fe325bf"
+    },
+    "retainedRevisions": [
+      "66ea28ed-cce0-4e0d-aab1-7fc40fe325bf"
+    ]
+  },
+  "pendingArtifactCleanup": []
+}
