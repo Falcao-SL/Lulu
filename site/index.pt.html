@@ -26,9 +26,9 @@
 <meta name="twitter:description" content="Um app nativo e pequeno para Mac. Motores MLX e llama.cpp, modelos e uma API local compatível com a OpenAI. Grátis, MIT.">
 <meta name="twitter:image" content="https://lulu.falcaosl.com/og-image.png">
 <link rel="icon" href="icon.png">
-<link rel="stylesheet" href="style.css?v=20261118">
+<link rel="stylesheet" href="style.css?v=20261126-2">
 <script src="release.js?v=20261116" defer></script>
-<script src="appearance.js?v=1"></script>
+<script src="appearance.js?v=2"></script>
 <script src="product-preview.js?v=3" defer></script>
 <script type="application/ld+json">
 {
@@ -72,13 +72,11 @@
     <a class="nav-link" href="https://github.com/Falcao-SL/Lulu">GitHub ↗</a>
     <a class="nav-link" href="index.html" hreflang="en" lang="en">EN</a>
     <div class="appearance-control" data-appearance-control hidden>
-      <label for="site-appearance">Aparência</label>
-      <select id="site-appearance">
-        <option value="system">Sistema</option>
+      <select id="site-appearance" aria-label="Aparência">
+        <option value="system" data-light="Sistema · Claro" data-dark="Sistema · Escuro">Sistema</option>
         <option value="light">Claro</option>
         <option value="dark">Escuro</option>
       </select>
-      <output for="site-appearance" aria-live="polite" data-light="Tema ativo · Claro" data-dark="Tema ativo · Escuro"></output>
     </div>
   </nav>
 </header>

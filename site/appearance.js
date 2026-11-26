@@ -18,14 +18,14 @@
     const control = document.querySelector('[data-appearance-control]');
     if (!control) return;
     const picker = control.querySelector('select');
-    const active = control.querySelector('output');
+    const systemOption = picker.querySelector('[value=system]');
     const demo = document.querySelector('#demo video');
     const source = demo.querySelector('source');
 
     function update() {
       apply();
       const mode = root.dataset.appearance;
-      active.textContent = active.dataset[mode];
+      systemOption.textContent = systemOption.dataset[mode];
       picker.value = choice;
       document.querySelectorAll('[data-tray-theme]').forEach((figure) => {
         figure.dataset.active = String(figure.dataset.trayTheme === mode);

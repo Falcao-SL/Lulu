@@ -82,25 +82,24 @@ td:first-child{font-weight:700;color:var(--ink);width:22%}
   .tray-feature { grid-template-columns: 1fr; margin-top: 48px; }
 }
 
-.appearance-control {
-  display: grid;
-  grid-template-columns: auto auto;
-  align-items: center;
-  gap: 3px 8px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 650;
-}
 .appearance-control[hidden] { display: none; }
 .appearance-control select {
+  min-height: 32px;
   color: var(--ink);
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 5px;
-  font: inherit;
+  padding: 4px 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
 }
-.appearance-control output { grid-column: 1 / -1; text-align: right; }
+.appearance-control select:focus { outline: none; }
+.appearance-control select:focus-visible {
+  outline: 1px solid var(--green);
+  outline-offset: 2px;
+}
 .tray-previews figure[data-active=true] img { outline: 2px solid var(--green); outline-offset: 3px; }
 .tray-previews figure[data-active=true] figcaption { color: var(--ink); font-weight: 750; }
 
