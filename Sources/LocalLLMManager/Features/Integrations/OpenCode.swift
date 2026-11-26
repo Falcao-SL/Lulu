@@ -15,14 +15,7 @@ enum OpenCodeClient {
         let json = directory.appendingPathComponent("opencode.json")
         let target = FileManager.default.fileExists(atPath: jsonc.path) ? jsonc : json
 
-        var root: [String: Any] = [:]
-        if FileManager.default.fileExists(atPath: target.path) {
-            let data = try Data(contentsOf: target)
-            guard let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                throw Failure(message: "Could not update \(target.lastPathComponent): the file is not valid JSON. Remove comments so Lulu can configure OpenCode.")
-            }
-            root = parsed
-        }
+        var root = try ClientConfig.readJSON(target, client: "OpenCode")
         guard root["providers"] == nil || root["providers"] is [String: Any] else {
             throw Failure(message: "Could not update OpenCode: providers is not an object.")
         }
@@ -60,11 +53,5 @@ enum OpenCodeClient {
         var text = String(decoding: data, as: UTF8.self)
         if !text.hasSuffix("\n") { text.append("\n") }
         try Data(text.utf8).write(to: target, options: .atomic)
-    }
-
-    static func fallbackID(engineID: String, path: String) -> String {
-        let url = URL(fileURLWithPath: path)
-        if engineID == "llama.cpp" { return url.lastPathComponent }
-        return url.resolvingSymlinksInPath().path
     }
 }

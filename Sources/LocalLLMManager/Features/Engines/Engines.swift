@@ -14,22 +14,22 @@ struct EngineStatus: Identifiable, Equatable {
 enum EngineCatalog {
     static let specs: [Spec] = {
         var items: [Spec] = []
-        #if arch(arm64)
-        items += [
-        Spec(
-            id: "mlx-lm",
-            name: "mlx-lm",
-            blurb: "Text in MLX with an OpenAI-compatible API.",
-            install: .uv(package: "mlx-lm", directory: "mlx-lm", distPrefix: "mlx_lm-", binary: "mlx_lm.server")
-        ),
-        Spec(
-            id: "mlx-vlm",
-            name: "mlx-vlm",
-            blurb: "Text and vision in MLX with an OpenAI-compatible API.",
-            install: .uv(package: "mlx-vlm", directory: "mlx-vlm", distPrefix: "mlx_vlm-", binary: "mlx_vlm.server")
-        ),
-        ]
-        #endif
+        if Machine.supportsMLX {
+            items += [
+                Spec(
+                    id: "mlx-lm",
+                    name: "mlx-lm",
+                    blurb: "Text in MLX with an OpenAI-compatible API.",
+                    install: .uv(package: "mlx-lm", directory: "mlx-lm", distPrefix: "mlx_lm-", binary: "mlx_lm.server")
+                ),
+                Spec(
+                    id: "mlx-vlm",
+                    name: "mlx-vlm",
+                    blurb: "Text and vision in MLX with an OpenAI-compatible API.",
+                    install: .uv(package: "mlx-vlm", directory: "mlx-vlm", distPrefix: "mlx_vlm-", binary: "mlx_vlm.server")
+                ),
+            ]
+        }
         items += [Spec(
             id: "llama.cpp",
             name: "llama.cpp",

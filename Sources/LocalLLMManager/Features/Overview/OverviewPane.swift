@@ -6,7 +6,6 @@ struct OverviewPane: View {
     private typealias Space = LuluTheme.Space
 
     private var active: Bool { model.phase == .starting || model.phase == .ready }
-    private var installed: Int { model.engines.filter(\.installed).count }
     private var downloads: Int { model.jobs.filter { $0.state == .running || $0.state == .queued }.count }
     private var memoryFraction: Double {
         guard model.memory.total > 0 else { return 0 }
@@ -18,24 +17,38 @@ struct OverviewPane: View {
             VStack(alignment: .leading, spacing: Space.xl) {
                 LuluPageHeader("Overview", symbol: "square.grid.2x2")
                 session
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: Space.md) { metrics }
+                        .frame(minWidth: 4 * 150 + 3 * Space.md)
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: Space.md), count: 2),
+                              spacing: Space.md) { metrics }
+                }
+                memory
                 #if canImport(Sparkle)
                 SparkleUpdateCard(model: model)
                 #else
                 updates
                 #endif
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 155), spacing: Space.md)], spacing: Space.md) {
-                    LuluMetric("Available memory", value: model.memory.total == 0 ? "—" : Format.bytes(model.memory.available), symbol: "memorychip")
-                    LuluMetric("Generation · tok/s", value: model.phase == .ready ? Format.rate(model.memory.predictRate) : "—", symbol: "bolt")
-                        .help("Generation rate reported by the engine. A dash means the metric is unavailable.")
-                    LuluMetric("Local models", value: String(model.models.count), symbol: "square.stack.3d.up")
-                    LuluMetric("Active downloads", value: String(downloads), symbol: "arrow.down.circle")
-                }
-                memory
-                shortcuts
             }
             .frame(maxWidth: 1100, alignment: .leading)
             .padding(.bottom, Space.md)
         }
+    }
+
+    @ViewBuilder private var metrics: some View {
+        LuluMetric("Available memory", value: model.memory.total == 0 ? "—" : Format.bytes(model.memory.available), symbol: "memorychip")
+        LuluMetric("Generation · tok/s", value: model.phase == .ready ? Format.rate(model.memory.predictRate) : "—", symbol: "bolt")
+            .help("Generation rate reported by the engine. A dash means the metric is unavailable.")
+        Button { model.showModels(.library) } label: {
+            LuluMetric("Local models", value: String(model.models.count), symbol: "square.stack.3d.up", navigates: true)
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Open the local model library")
+        Button { model.showModels(.downloads) } label: {
+            LuluMetric("Active downloads", value: String(downloads), symbol: "arrow.down.circle", navigates: true)
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Open the download queue")
     }
 
     @ViewBuilder private var phaseBadge: some View {
@@ -69,33 +82,49 @@ struct OverviewPane: View {
     }
 
     private var session: some View {
-        HStack(spacing: Space.lg) {
-            LuluEmblem(side: 68)
-            VStack(alignment: .leading, spacing: Space.sm) {
+        HStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: Space.md) {
                 HStack(spacing: Space.sm) {
-                    Text("Local server").font(LuluTheme.TypeStyle.section)
+                    Text("Local server")
+                        .font(.system(.title2, design: .rounded, weight: .semibold))
                     phaseBadge
                 }
                 Text(sessionDetail).font(LuluTheme.TypeStyle.body).foregroundStyle(.secondary)
                     .lineLimit(2).help(sessionDetail)
+                sessionAction
             }
-            Spacer(minLength: Space.sm)
-            Button {
-                model.pane = !active && model.models.isEmpty ? .models : .server
-            } label: {
-                Text(active ? "Manage server" : model.models.isEmpty ? "Choose model" : "Configure server")
-            }
-            .buttonStyle(.borderedProminent)
+            .padding(Space.xl)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            ServerEmblem()
+                .frame(width: 220, height: 168)
+                .clipped()
         }
-        .padding(Space.xl)
         .luluIdentityPanel()
+        .clipShape(.rect(cornerRadius: LuluTheme.Radius.card))
+    }
+
+    @ViewBuilder private var sessionAction: some View {
+        if model.phase == .ready {
+            Button("Open chat", systemImage: "bubble.left") { model.openWebChat(startSelected: false) }
+                .buttonStyle(.borderedProminent)
+        } else if model.phase == .failed || active {
+            Button(model.phase == .failed ? "Review server" : "View server") { model.pane = .server }
+                .buttonStyle(.bordered)
+        } else if let selected = model.models.first(where: { $0.id == model.selectedModelID }) {
+            Button("Start model", systemImage: "play.fill") { model.useModel(selected) }
+                .buttonStyle(.borderedProminent)
+                .disabled(model.purgingMemory || model.switchingModel)
+        } else {
+            Button("Choose model", systemImage: "square.stack.3d.up") { model.showModelRecommendations() }
+                .buttonStyle(.borderedProminent)
+        }
     }
 
     private var sessionDetail: String {
         if active, let running = model.runningModel { return running.name }
         if model.phase == .failed { return "Check the server log to identify the error." }
         if model.models.isEmpty { return "Add a model to your library to get started." }
-        return "Choose a model from your library and start the server."
+        return model.models.first { $0.id == model.selectedModelID }?.name ?? "Choose a model from your library."
     }
 
     private var memory: some View {
@@ -128,36 +157,25 @@ struct OverviewPane: View {
         .luluCard()
     }
 
-    private var shortcuts: some View {
-        VStack(alignment: .leading, spacing: Space.lg) {
-            LuluSectionHeader("Quick access", symbol: "arrow.up.forward.square")
-            shortcut("cpu", "Engines", "\(installed) of \(model.engines.count) built-in engines installed", .engines)
-            Divider()
-            shortcut("square.stack.3d.up", "Library and downloads", "Search models and manage local files", .models)
-            Divider()
-            shortcut("network", "API connection", active ? "http://127.0.0.1:\(model.port)/v1" : "Configure model, context and port", .server)
-            if model.phase == .ready {
-                Button(model.copied ? "Endpoint copied" : "Copy API endpoint") { model.copyEndpoint() }
-            }
-            ClientRack(model: model)
-        }
-        .padding(Space.lg)
-        .luluCard()
-    }
+}
 
-    private func shortcut(_ symbol: String, _ title: String, _ detail: String, _ pane: Pane) -> some View {
-        Button { model.pane = pane } label: {
-            HStack(spacing: Space.md) {
-                LuluIcon(symbol)
-                VStack(alignment: .leading, spacing: Space.xs) {
-                    Text(title).font(LuluTheme.TypeStyle.body.weight(.medium))
-                    Text(detail).font(LuluTheme.TypeStyle.caption).foregroundStyle(.secondary)
-                }
-                Spacer()
-                LuluGlyph("chevron.right").font(.caption).foregroundStyle(.secondary)
-                    .accessibilityHidden(true)
-            }.contentShape(Rectangle())
-        }.buttonStyle(.plain)
+private struct ServerEmblem: View {
+    var body: some View {
+        ZStack {
+            ForEach([104.0, 142.0, 180.0, 218.0], id: \.self) { diameter in
+                Circle()
+                    .strokeBorder(LuluTheme.orbit.opacity(0.26), lineWidth: 1)
+                    .frame(width: diameter, height: diameter)
+            }
+            Circle().fill(LuluTheme.orbit)
+                .frame(width: 8, height: 8).offset(x: 61, y: -35)
+            Circle().fill(LuluTheme.orbit.opacity(0.65))
+                .frame(width: 5, height: 5).offset(x: -72, y: 54)
+            LuluEmblem(side: 74)
+                .rotationEffect(.degrees(-8))
+                .shadow(color: LuluTheme.ink.opacity(0.24), radius: 12, y: 5)
+        }
+        .accessibilityHidden(true)
     }
 }
 

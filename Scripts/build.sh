@@ -4,6 +4,7 @@ cd "$(dirname "$0")/.."
 
 APP_NAME="Lulu"
 BUILD_DIR="build"
+SOURCE_DIR="Sources/LocalLLMManager"
 APP_BUNDLE="${BUILD_DIR}/${APP_NAME}.app"
 VERSION="${VERSION:-2.0.0}"
 BUILD="${BUILD:-0}"
@@ -13,15 +14,19 @@ case "$ARCH" in arm64|x86_64) ;; *) echo "Arquitetura inválida: $ARCH" >&2; exi
 echo "==> Building ${APP_NAME}..."
 mkdir -p "${BUILD_DIR}"
 SPARKLE_DIR="$(./Scripts/prepare-sparkle.sh)"
+sources=()
+while IFS= read -r -d '' source; do
+  sources+=("$source")
+done < <(find "$SOURCE_DIR" -type f -name '*.swift' -print0)
 swiftc -parse-as-library -O -target "${ARCH}-apple-macosx14.0" \
   -framework SwiftUI -framework AppKit -framework Security -lsqlite3 \
   -F "${SPARKLE_DIR}" -framework Sparkle -Xlinker -rpath -Xlinker '@executable_path/../Frameworks' \
-  Sources/LocalLLMManager/*.swift \
+  "${sources[@]}" \
   -o "${BUILD_DIR}/Lulu"
 
 echo "==> Rendering icon..."
 swiftc -parse-as-library -framework AppKit \
-  Sources/LocalLLMManager/CatGeometry.swift \
+  "${SOURCE_DIR}/Shared/DesignSystem/CatGeometry.swift" \
   Scripts/render-icon.swift \
   -o "${BUILD_DIR}/render-icon"
 "${BUILD_DIR}/render-icon" "${BUILD_DIR}/AppIcon.iconset"

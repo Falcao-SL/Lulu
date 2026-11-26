@@ -29,7 +29,7 @@ struct EngineOption: Identifiable {
         return ["/Applications/\(name)", "\(home)/Applications/\(name)"].contains { FileManager.default.fileExists(atPath: $0) }
     }
 
-    static let external: [EngineOption] = [
+    static let external: [EngineOption] = ([
         .init(id: "nativ", name: "Nativ", icon: "macwindow", purpose: "Native MLX app for this Mac with an OpenAI-compatible server.", requirement: "Apple Silicon · macOS 26 or later · Homebrew", url: "https://github.com/Blaizzy/nativ/releases/latest", command: nil),
         .init(id: "ollama", name: "Ollama", icon: "shippingbox", purpose: "Local model library and API for applications.", requirement: "CLI via Homebrew or official app", url: "https://ollama.com/download/mac", command: nil),
         .init(id: "lmstudio", name: "LM Studio", icon: "desktopcomputer", purpose: "Chat, explore models and serve a local API.", requirement: "App via Homebrew or official download", url: "https://lmstudio.ai/download", command: nil),
@@ -40,7 +40,7 @@ struct EngineOption: Identifiable {
         .init(id: "koboldcpp", name: "KoboldCpp", icon: "book", purpose: "GGUF application with a local interface and API.", requirement: "Official Apple Silicon binary", url: "https://github.com/LostRuins/koboldcpp/releases/latest", command: nil),
         .init(id: "strata", name: "Strata", icon: "square.3.layers.3d", purpose: "MoE inference using memory and SSD. Check model compatibility.", requirement: "Apple Silicon · macOS 15 or later · requirements vary by model", url: "https://github.com/Niko1221/Strata/releases/latest", command: nil),
         .init(id: "colibri", name: "Colibri", icon: "bird", purpose: "MoE models with experts distributed across GPU, RAM and disk.", requirement: "Release macOS · Python 3 · per-model configuration", url: "https://github.com/JustVugg/colibri/releases/latest", command: nil),
-    ]
+    ] as [EngineOption]).filter { Machine.supportsMLX || $0.id != "nativ" }
 }
 
 struct AdditionalEnginesView: View {

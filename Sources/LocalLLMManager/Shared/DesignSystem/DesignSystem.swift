@@ -7,11 +7,14 @@ enum LuluTheme {
     static let brandMint = Color(red: 0.70, green: 0.91, blue: 0.80)
     static let brandIvory = Color(red: 0.91, green: 0.98, blue: 0.96)
 
-    static let accent = adaptive("LuluAccent", light: 0x246754, dark: 0x91D8BD)
-    static let canvas = adaptive("LuluCanvas", light: 0xF3F6F2, dark: 0x131B1A)
-    static let surface = adaptive("LuluSurface", light: 0xFDFFFC, dark: 0x1B2624)
-    static let subtle = adaptive("LuluSubtle", light: 0xE5F2EB, dark: 0x243B34)
-    static let border = adaptive("LuluBorder", light: 0xCCDAD1, dark: 0x354B42)
+    static let accent = adaptive("LuluAccent", light: 0x1D6550, dark: 0x9BE6C4)
+    static let canvas = adaptive("LuluCanvas", light: 0xF6F5EF, dark: 0x111B19)
+    static let surface = adaptive("LuluSurface", light: 0xFFFEF9, dark: 0x1A2723)
+    static let subtle = adaptive("LuluSubtle", light: 0xE0EFE6, dark: 0x243B33)
+    static let border = adaptive("LuluBorder", light: 0xD1DBD0, dark: 0x354B42)
+    static let heroStart = adaptive("LuluHeroStart", light: 0xDCEFE4, dark: 0x18302A)
+    static let heroEnd = adaptive("LuluHeroEnd", light: 0xF3EBD2, dark: 0x244D3E)
+    static let orbit = adaptive("LuluOrbit", light: 0x477860, dark: 0xA2DBB9)
 
     fileprivate static func adaptive(_ name: String, light: UInt32, dark: UInt32) -> Color {
         Color(nsColor: NSColor(name: NSColor.Name(name)) { appearance in
@@ -125,7 +128,6 @@ struct LuluPageHeader: View {
             LuluIcon(symbol)
             Text(title).font(LuluTheme.TypeStyle.page)
             Spacer(minLength: LuluTheme.Space.md)
-            LuluSignature()
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
@@ -178,7 +180,10 @@ struct LuluMetric: View {
     let value: String
     let symbol: String
 
-    init(_ title: String, value: String, symbol: String) {
+    let navigates: Bool
+
+    init(_ title: String, value: String, symbol: String, navigates: Bool = false) {
+        self.navigates = navigates
         self.title = title
         self.value = value
         self.symbol = symbol
@@ -186,10 +191,16 @@ struct LuluMetric: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: LuluTheme.Space.sm) {
-            Label { Text(title).foregroundStyle(.secondary) } icon: {
-                LuluGlyph(symbol).foregroundStyle(LuluTheme.accent)
+            HStack {
+                Label { Text(title).foregroundStyle(.secondary) } icon: {
+                    LuluGlyph(symbol).foregroundStyle(LuluTheme.accent)
+                }
+                .font(LuluTheme.TypeStyle.caption)
+                if navigates {
+                    Spacer(minLength: LuluTheme.Space.xs)
+                    Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.secondary)
+                }
             }
-            .font(LuluTheme.TypeStyle.caption)
             Text(value).font(LuluTheme.TypeStyle.metric)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -237,7 +248,7 @@ struct LuluEmblem: View {
 extension View {
     func luluIdentityPanel() -> some View {
         background(
-            LinearGradient(colors: [LuluTheme.subtle, LuluTheme.surface], startPoint: .topLeading, endPoint: .bottomTrailing),
+            LinearGradient(colors: [LuluTheme.heroStart, LuluTheme.heroEnd], startPoint: .leading, endPoint: .trailing),
             in: RoundedRectangle(cornerRadius: LuluTheme.Radius.card, style: .continuous)
         )
         .overlay {

@@ -11,7 +11,7 @@ Lulu requires macOS 14 or later. Apple Silicon supports MLX and GGUF; Intel Macs
 - Find and download models from Hugging Face, inspect available metadata, and manage local MLX and GGUF files.
 - Install and manage the integrated mlx-lm, mlx-vlm and llama.cpp engines. MLX requires Apple Silicon.
 - Start and stop a local model server, choose a context and port, and copy the API endpoint.
-- Configure supported clients, including OpenCode, Cursor, Codex, Claude Code, Aider and Zed. Client protocol support depends on the selected engine.
+- Configure supported clients, including OpenCode, Codex, Claude Code, Aider, Zed and OpenBot Desktop. Lulu checks the local API before updating client settings. OpenBot’s automatic setup works with MLX.
 - Monitor process and system memory, model weights, KV cache, context and generation speed when reported by the engine.
 - Purge memory: Lulu stops its server and asks macOS to release inactive memory.
 
@@ -30,6 +30,17 @@ The [user guide](docs/guia.md) contains additional details on downloads, memory 
 Install the Xcode Command Line Tools and macOS SDK, then run `make build`. The app is written to `build/Lulu.app`. `make package` creates a DMG and ZIP; set `ARCH=x86_64` for Intel or `ARCH=arm64` for Apple Silicon.
 
 Each push to `main` starts the macOS release workflow, which builds and publishes both architectures, versioned ZIP and DMG files, stable DMG names and SHA-256 checksums. The release pipeline requires Developer ID signing and Apple notarization credentials; local builds use ad hoc signing by default.
+
+## Source layout
+
+The macOS app uses a single Swift Package Manager target under [`Sources/LocalLLMManager`](Sources/LocalLLMManager).
+
+- `App` contains the entry point, navigation and shared application state.
+- `Features` groups the code for models, inference engines, the server, performance, chat, integrations, the menu bar and updates.
+- `Infrastructure` handles Hugging Face requests and transfers, keychain access and inference server probes.
+- `Shared` contains the design system, branding and system utilities used across features.
+
+App assets live in `Resources`, build and release scripts in `Scripts`, and the product website in `site`.
 
 ## Data and privacy
 

@@ -4,35 +4,51 @@ import SwiftUI
 struct ClientRack: View {
     @ObservedObject var model: AppModel
 
-    private let columns = [GridItem(.adaptive(minimum: 92), spacing: LuluTheme.Space.sm)]
+    private let columns = [GridItem(.adaptive(minimum: 185), spacing: LuluTheme.Space.sm)]
 
     var body: some View {
         VStack(alignment: .leading, spacing: LuluTheme.Space.md) {
             LuluSectionHeader("Use on this Mac", symbol: "arrow.up.right")
-            Text("Each icon configures that application to use the local server.")
-                .font(LuluTheme.TypeStyle.caption)
-                .foregroundStyle(.secondary)
+            if model.phase != .ready {
+                Text("Start the server to connect your coding tools.")
+                    .font(LuluTheme.TypeStyle.caption)
+                    .foregroundStyle(.secondary)
+            }
             LazyVGrid(columns: columns, alignment: .leading, spacing: LuluTheme.Space.sm) {
                 ForEach(ClientID.allCases) { client in
+                    let supported = client.supports(engine: model.runningModel?.engineID)
                     Button { model.configure(client) } label: {
-                        VStack(spacing: LuluTheme.Space.xs) {
+                        HStack(spacing: LuluTheme.Space.sm) {
                             ClientIcon(name: client.rawValue)
-                            Text(client.title)
-                                .font(LuluTheme.TypeStyle.caption)
-                                .foregroundStyle(.primary)
-                                .lineLimit(2)
-                                .multilineTextAlignment(.center)
+                            Text(client.title).lineLimit(1)
+                            Spacer(minLength: 0)
+                            if model.configuringClient == client {
+                                ProgressView().controlSize(.small)
+                            } else {
+                                Image(systemName: "chevron.right")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
                         }
-                        .frame(maxWidth: .infinity, minHeight: 78)
-                        .padding(.vertical, LuluTheme.Space.sm)
-                        .background(LuluTheme.subtle, in: RoundedRectangle(cornerRadius: LuluTheme.Radius.control))
+                        .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
+                        .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
-                    .disabled(model.models.isEmpty && model.runningModel == nil)
-                    .accessibilityLabel("Configure in \(client.title)")
+                    .buttonStyle(.bordered)
+                    .disabled(model.phase != .ready || !supported || model.configuringClient != nil)
+                    .accessibilityLabel("Connect \(client.title)")
+                    .help(help(for: client, supported: supported))
                 }
             }
         }
+        .padding(LuluTheme.Space.lg)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .luluCard()
+    }
+
+    private func help(for client: ClientID, supported: Bool) -> String {
+        if client == .openbot {
+            return supported ? "Configure OpenBot Desktop with the active MLX model" : "Automatic OpenBot setup requires MLX"
+        }
+        return supported ? "Connect \(client.title) to Lulu" : "Requires a compatible llama.cpp server"
     }
 }
 
@@ -73,18 +89,31 @@ struct ClientIcon: View {
 
     var body: some View {
         Group {
-            if let image = NSImage(contentsOf: Self.url(name)) {
+            if name == ClientID.aider.rawValue {
+                Image(systemName: "terminal.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(LuluTheme.accent)
+            } else if let image = image {
                 Image(nsImage: image)
                     .resizable()
                     .interpolation(.high)
+                    .scaledToFit()
             } else {
                 Text(String(name.prefix(1)).uppercased())
                     .font(LuluTheme.TypeStyle.section)
             }
         }
-        .frame(width: 36, height: 36)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .frame(width: 30, height: 30)
+        .clipShape(RoundedRectangle(cornerRadius: 7))
         .accessibilityHidden(true)
+    }
+
+    private var image: NSImage? {
+        if name == ClientID.openbot.rawValue,
+           let app = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "app.openbot.desktop") {
+            return NSWorkspace.shared.icon(forFile: app.path)
+        }
+        return NSImage(contentsOf: Self.url(name))
     }
 
     private static func url(_ name: String) -> URL {

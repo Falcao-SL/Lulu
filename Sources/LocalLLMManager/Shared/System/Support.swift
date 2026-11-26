@@ -54,6 +54,14 @@ enum Format {
 }
 
 enum Machine {
+    static var supportsMLX: Bool {
+        #if os(macOS) && arch(arm64)
+        true
+        #else
+        false
+        #endif
+    }
+
     static let performanceCores: Int = {
         var count: Int32 = 0
         var length = MemoryLayout<Int32>.size

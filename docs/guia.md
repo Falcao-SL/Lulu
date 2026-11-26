@@ -1,6 +1,10 @@
 # Guia do Lulu
 
+Use **Appearance**, no rodapé da navegação, para escolher **Light**, **Dark** ou **System**. O Lulu salva a escolha e a aplica também ao chat no navegador.
+
 ## Biblioteca e downloads
+
+Em **Models**, use **Discover** para encontrar um modelo, **Library** para usar os modelos instalados e **Downloads** para acompanhar a fila. Ao confirmar um download, o Lulu abre a fila.
 
 O Lulu procura modelos MLX em `~/models/mlx` e GGUF em `~/models/gguf`. Use **Atualizar** após adicionar arquivos manualmente. Um arquivo isolado de pesos MLX não substitui a configuração e o tokenizer do repositório.
 
@@ -10,15 +14,31 @@ A chave opcional do Hugging Face fica em **Modelos**. Use **Guardar chave** para
 
 ## Servidor
 
-Escolha um modelo antes de iniciar. O Lulu verifica se o motor correspondente está instalado e direciona à tela Motores quando necessário. Modelo, contexto e porta ficam bloqueados enquanto o servidor está iniciando ou disponível; pare-o para alterar a configuração.
+Em **Overview**, use **Start model** para iniciar o modelo selecionado. Quando estiver pronto, **Open chat** abre o navegador. Para ajustar o contexto ou a porta, abra **Server → Context and port**. O Lulu verifica se o motor correspondente está instalado e direciona à tela Motores quando necessário. Modelo, contexto e porta ficam bloqueados enquanto o servidor está iniciando ou disponível; pare-o para alterar a configuração.
 
 O llama.cpp usa flash attention, camadas na GPU e threads dos núcleos de desempenho. No MLX, o limite de KV depende do motor e dos metadados disponíveis. Contextos maiores podem consumir mais memória; comece com 4K ou 8K e acompanhe o uso.
 
 O status disponível indica que a verificação HTTP respondeu. Consulte os logs se o motor falhar ao carregar o modelo.
 
-A chave de acesso fica em **Servidor**. O Lulu gera uma chave `lulu_…` no Keychain; **Mostrar**, **Copiar** e **Regenerar** controlam o valor. O llama.cpp exige essa chave (`--api-key`). Os clientes configurados pelo Lulu recebem a mesma chave.
+A chave de acesso fica em **Server → API access key**. O Lulu gera uma chave `lulu_…` no Keychain; **Mostrar**, **Copiar** e **Regenerar** controlam o valor. O llama.cpp exige essa chave (`--api-key`). Os clientes configurados pelo Lulu recebem a mesma chave.
 
-A fileira **Usar neste Mac** grava o servidor local no OpenCode, Codex, Antigravity, Cursor, Claude Code, OpenClaude, DeepSeek Harness, Aider e Zed. Os outros provedores e chaves permanecem. Com o servidor disponível, o identificador é o que `/v1/models` devolve; com o servidor parado, é uma estimativa. Abra o programa de novo depois de configurar. No Cursor, feche o app antes de configurar: o Lulu adiciona o nome do modelo em **Add Custom Model** (`userAddedModels`), aponta o Base URL e pede para colar a chave em OpenAI API Key. O Codex usa `/v1/responses` e o Claude Code usa `/v1/messages`; o mlx-lm não oferece esses caminhos.
+A seção **Use on this Mac**, em **Server**, configura OpenCode, Codex, Claude Code, Aider, Zed e Pi depois que o servidor local estiver disponível. O Lulu lê o identificador em `/v1/models` e verifica a rota da API antes de gravar a configuração. Codex e Claude Code precisam de uma versão do llama.cpp que ofereça, respectivamente, `/v1/responses` e `/v1/messages`. Para o Zed, adicione a chave local em **Agent Settings → LLM Providers → Lulu**.
+
+Para conectar o Pi ao modelo ativo, clique em **Server → Use on this Mac → Pi**. O Lulu registra o provedor em `models.json` na pasta de configuração do Pi. Se o Pi estiver aberto, use `/reload`. Depois, escolha o modelo do Lulu com `/model`.
+
+Com um modelo MLX ativo e o OpenBot Desktop fechado, clique em **OpenBot**. O Lulu cadastra o provedor local e abre o OpenBot. Escolha o modelo no seletor do OpenBot para usá-lo.
+
+Ao fechar a última janela do Lulu, ele sai do Dock e continua na barra de menus, com o servidor e os downloads em andamento. No tray, **Settings** reabre a janela e **Quit** encerra o Lulu. Em **Models**, escolha uma versão do modelo e clique em **Download model**. Quando o download terminar, clique em **Use model** para iniciar o servidor com ele ou trocar o modelo em uso.
+
+## Chat e recomendações
+
+Na tela inicial, o campo de mensagem fica no centro. Depois do primeiro envio, o histórico aparece acima e o campo fica no rodapé. Os modelos compatíveis habilitam os botões de anexo para **PNG e JPEG** ou **WAV, MP3 e FLAC**. Os arquivos são enviados ao modelo local, com limite de 4 MB por arquivo e 12 MB por conversa.
+
+Clique em **Open chat** na barra de menus do macOS para abrir o chat no navegador padrão. Em um modelo instalado, **Chat with model** carrega esse modelo e abre o chat. As respostas são geradas no Mac e aparecem em streaming. Use **Stop** para interromper a resposta. Na barra lateral, **New chat** inicia outra conversa na mesma aba. Você também pode reabrir, renomear, excluir e exportar conversas como Markdown.
+
+O Lulu salva a conversa em `~/.lulu/chats.sqlite3` após cada resposta. O arquivo `.md` exportado contém as mensagens, com a formatação original, e os nomes dos anexos. O chat usa `/v1/chat/completions` com o mesmo formato de mensagens documentado pelo [llama.cpp](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md#post-v1chatcompletions-openai-compatible-chat-completions-api).
+
+O botão **Browse models** no tray abre **Models → Discover → Recommended for this Mac**. As sugestões usam a RAM total e o tipo de processador do Mac. Escolha **View files** para conferir a variante antes de confirmar o download. Em **Browse all model families**, há mais opções para explorar. A memória necessária varia conforme o modelo, a quantização e o contexto configurado.
 
 ## Entender as métricas
 

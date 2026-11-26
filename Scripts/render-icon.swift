@@ -51,26 +51,16 @@ func png(_ pixels: Int) throws -> Data {
     context.restoreGState()
     let inset = CGFloat(pixels) * 0.18
     let rect = CGRect(x: inset, y: inset, width: CGFloat(pixels) - inset * 2, height: CGFloat(pixels) - inset * 2)
-    context.setFillColor(CGColor(red: 0.07, green: 0.20, blue: 0.16, alpha: 1))
-    context.addPath(CatGeometry.head(in: rect))
-    context.fillPath()
-    context.setStrokeColor(CGColor(red: 0.07, green: 0.20, blue: 0.16, alpha: 1))
-    context.setLineCap(.round)
-    context.setLineWidth(CatGeometry.whiskerWidth(for: rect.width))
-    for (start, end) in CatGeometry.whiskers(in: rect) {
-        context.move(to: start)
-        context.addLine(to: end)
-        context.strokePath()
+    let ink = CGColor(srgbRed: 20 / 255, green: 66 / 255, blue: 54 / 255, alpha: 1)
+    let ivory = CGColor(srgbRed: 235 / 255, green: 250 / 255, blue: 246 / 255, alpha: 1)
+    context.saveGState()
+    context.concatenate(CatGeometry.transform(in: rect))
+    for (tone, path) in CatGeometry.layers {
+        context.setFillColor(tone == .ink ? ink : ivory)
+        context.addPath(path)
+        context.fillPath()
     }
-    context.setFillColor(CGColor(red: 0.91, green: 0.98, blue: 0.96, alpha: 1))
-    context.addPath(CatGeometry.innerEarLeft(in: rect))
-    context.addPath(CatGeometry.innerEarRight(in: rect))
-    context.fillPath()
-    context.fillEllipse(in: CatGeometry.eyeLeft(in: rect))
-    context.fillEllipse(in: CatGeometry.eyeRight(in: rect))
-    context.setFillColor(CGColor(red: 0.07, green: 0.20, blue: 0.16, alpha: 1))
-    context.fillEllipse(in: CatGeometry.pupilLeft(in: rect))
-    context.fillEllipse(in: CatGeometry.pupilRight(in: rect))
+    context.restoreGState()
     guard let image = context.makeImage() else { throw NSError(domain: "lulu", code: 2) }
     let rep = NSBitmapImageRep(cgImage: image)
     guard let data = rep.representation(using: .png, properties: [:]) else { throw NSError(domain: "lulu", code: 3) }

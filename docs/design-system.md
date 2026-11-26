@@ -1,6 +1,6 @@
 # Design system do Lulu
 
-O Lulu combina superfícies discretas, verde de destaque e a marca do gato. A fundação compartilhada está em `Sources/LocalLLMManager/DesignSystem.swift`. O guia interativo fica no menu **Ajuda → Guia visual do Lulu**, com prévias clara e escura e exemplos de componentes.
+O Lulu combina superfícies discretas, verde de destaque e a marca do gato. Os componentes e a identidade visual ficam em [Shared/DesignSystem](../Sources/LocalLLMManager/Shared/DesignSystem). O guia interativo fica no menu **Ajuda → Guia visual do Lulu**, com prévias clara e escura e exemplos de componentes.
 
 ## Cores
 
@@ -8,16 +8,16 @@ Use os nomes semânticos na interface para que as cores acompanhem a aparência 
 
 | Token | Claro | Escuro | Uso |
 | --- | --- | --- | --- |
-| `accent` | #246754 | #91D8BD | Ações, seleção e símbolos |
-| `canvas` | #F3F6F2 | #131B1A | Fundo da área de trabalho |
-| `surface` | #FDFFFC | #1B2624 | Cartões e painéis |
-| `subtle` | #E5F2EB | #243B34 | Destaques suaves e ícones |
-| `border` | #CCDAD1 | #354B42 | Contornos e separação |
+| `accent` | #1D6550 | #9BE6C4 | Ações, seleção e símbolos |
+| `canvas` | #F6F5EF | #111B19 | Fundo da área de trabalho |
+| `surface` | #FFFEF9 | #1A2723 | Cartões e painéis |
+| `subtle` | #E0EFE6 | #243B33 | Destaques suaves e ícones |
+| `border` | #D1DBD0 | #354B42 | Contornos e separação |
 | Informação | #246754 | #91D8BD | Operação em andamento |
 | Atenção | #78490E | #EDC788 | Situação que pede revisão |
 | Falha | #943B3F | #F3AAAE | Erro operacional |
 
-Texto principal e secundário usam as cores semânticas do sistema. A marca mantém verde profundo, menta e marfim em ambas as aparências. O contraste calculado do destaque sobre o painel é 6,65:1 no tema claro e 9,46:1 no escuro. Esses valores se referem a esse par de cores, e não a uma auditoria completa de acessibilidade.
+Texto principal e secundário usam as cores semânticas do sistema. A marca mantém verde profundo, menta e marfim em ambas as aparências. O contraste calculado do destaque sobre o painel é 6,86:1 no tema claro e 10,68:1 no escuro. Esses valores se referem a esse par de cores, e não a uma auditoria completa de acessibilidade.
 
 ## Tipografia e medidas
 
@@ -70,7 +70,7 @@ O painel, os motores, a biblioteca, os resultados da busca, o servidor e as mét
 
 ## Assinatura da marca
 
-O componente LuluEmblem reúne o gato em um selo com gradiente menta e marfim, usado na navegação e no cartão de sessão. LuluSignature deriva três traços dos bigodes e assina os cabeçalhos. Ambos são decorativos e ficam ocultos da leitura assistiva. O modificador luluIdentityPanel destaca a sessão com uma transição suave entre seleção e painel. Reserve esses detalhes aos pontos de identidade para preservar a hierarquia das telas.
+O componente LuluEmblem reúne o gato em um selo com gradiente menta e marfim, usado na navegação e no cartão do servidor. LuluSignature deriva três traços dos bigodes e aparece no guia visual. Ambos são decorativos e ficam ocultos da leitura assistiva. O modificador luluIdentityPanel combina menta e marfim no tema claro e tons de verde no escuro. Reserve esses detalhes aos pontos de identidade para preservar a hierarquia das telas.
 
 ## Ícones locais e desempenho
 

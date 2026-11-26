@@ -6,36 +6,15 @@ enum Pane: String, CaseIterable, Hashable {
     case overview, engines, models, server, speed
 }
 
-enum ServerPhase: String {
-    case stopped, starting, ready, failed
-}
-
-struct MemorySnapshot: Equatable {
-    var total: UInt64 = 0
-    var available: UInt64 = 0
-    var active: UInt64 = 0
-    var inactive: UInt64 = 0
-    var wired: UInt64 = 0
-    var compressed: UInt64 = 0
-    var purgeable: UInt64 = 0
-    var footprint: UInt64 = 0
-    var resident: UInt64 = 0
-    var processWired: UInt64 = 0
-    var weights: UInt64 = 0
-    var kvReserved: UInt64 = 0
-    var kvUsed: UInt64 = 0
-    var contextTokens: Int = 0
-    var contextPeak: Int?
-    var trainedContext: Int?
-    var kvSummary: String = ""
-    var promptRate: Double?
-    var predictRate: Double?
-}
-
 @MainActor
 final class AppModel: ObservableObject {
     @Published var pane: Pane = .overview {
-        didSet { if pane != oldValue { tick() } }
+        didSet {
+            if pane != oldValue {
+                configureMonitor()
+                tick()
+            }
+        }
     }
     @Published var engines: [EngineStatus] = []
     @Published var models: [ModelItem] = []
@@ -44,6 +23,8 @@ final class AppModel: ObservableObject {
     @Published var listedFiles: [ListedFile] = []
     @Published var listedRepo = ""
     @Published var repoQuery = ""
+    @Published var modelSection: ModelSection = .discover
+    @Published private(set) var recommendationsRequest: UUID?
     @Published var tokenDraft = ""
     @Published var tokenNote = ""
     @Published var copiedEngineCommand: String?
@@ -54,6 +35,7 @@ final class AppModel: ObservableObject {
     @Published var showAllHubResults = false
     @Published var selectedHubHit: HubHit?
     private var hubRequestID = UUID()
+    private var scanRequestID = UUID()
     @Published var searching = false
     @Published var selectedModelID = "" {
         didSet { normalizeContext() }
@@ -61,11 +43,18 @@ final class AppModel: ObservableObject {
     @Published var contextLength = 8192
     @Published var port = 8000
     @Published var phase: ServerPhase = .stopped {
-        didSet { if phase != oldValue { configureMonitor() } }
+        didSet {
+            guard phase != oldValue else { return }
+            configureMonitor()
+            if !serverActive && pane == .server && showServerLogs { refreshLog() }
+        }
     }
     @Published var runningModel: ModelItem?
     @Published var memory = MemorySnapshot()
     @Published var logText = ""
+    @Published var showServerLogs = false {
+        didSet { if showServerLogs { refreshLog() } }
+    }
     @Published var operationText = ""
     @Published var banner: String?
     @Published var configuredNotice: ClientNotice?
@@ -81,6 +70,75 @@ final class AppModel: ObservableObject {
     @Published var updateVersion: String?
     @Published var updateURL: URL?
     @Published var checkingUpdate = false
+
+    @Published private(set) var switchingModel = false
+    @Published private(set) var purgingMemory = false
+    @Published private(set) var configuringClient: ClientID?
+
+    var serverActive: Bool { phase == .starting || phase == .ready }
+    var modelVariants: [String] { Hub.variants(listedFiles) }
+    var selectedVariant: String {
+        let selected = Hub.variants(listedFiles.filter(\.selected))
+        return selected.count == 1 ? selected[0] : ""
+    }
+    var hasDownloadableSelection: Bool { Hub.isDownloadable(listedFiles) }
+
+    func selectVariant(_ variant: String) {
+        guard !variant.isEmpty else { return }
+        listedFiles = Hub.choosing(variant, in: listedFiles)
+    }
+
+    func downloadedModel(for job: DownloadJob) -> ModelItem? {
+        guard job.state == .done else { return nil }
+        let root = URL(fileURLWithPath: job.destination).standardizedFileURL
+        let paths = Set(job.files.filter(\.done).map {
+            root.appendingPathComponent($0.path).standardizedFileURL.path
+        })
+        return models.first { item in
+            let path = URL(fileURLWithPath: item.path).standardizedFileURL.path
+            return item.engineID == "llama.cpp" ? paths.contains(path) : path == root.path
+        }
+    }
+
+    @discardableResult
+    func useModel(_ item: ModelItem, context: Int? = nil) -> Bool {
+        guard !purgingMemory else {
+            banner = "Wait for memory purge to finish before loading a model."
+            return false
+        }
+        guard !switchingModel, models.contains(where: { $0.id == item.id }) else { return false }
+        guard engines.contains(where: { $0.id == item.engineID && $0.installed && !$0.binary.isEmpty }) else {
+            banner = "Install \(item.engineID) to use \(item.name)."
+            pane = .engines
+            return false
+        }
+        let desiredContext = ContextPolicy.clamped(context ?? contextLength, declared: item.arch?.trainedContext)
+        if serverActive && runningModel?.id == item.id && desiredContext == contextLength {
+            pane = .server
+            return true
+        }
+
+        pane = .server
+        if serverActive {
+            switchingModel = true
+            let pid = releaseServer()
+            Task {
+                await Task.detached { MemoryMonitor.terminate(pid) }.value
+                switchingModel = false
+                launch(item, context: desiredContext)
+            }
+            return true
+        }
+        launch(item, context: desiredContext)
+        return serverActive
+    }
+
+    private func launch(_ item: ModelItem, context: Int) {
+        selectedModelID = item.id
+        contextLength = context
+        persist()
+        startServer()
+    }
 
     let contextOptions = [2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576]
     var selectedContextLimit: Int? {
@@ -108,11 +166,18 @@ final class AppModel: ObservableObject {
     private var expectExit = false
     private var baseline: UInt64?
     private var probeInFlight = false
-    private var tickCount = 0
+    private var metricsVisible: Bool { monitoringActive && (pane == .overview || pane == .speed) }
     private var sizing = false
     private var speedMark: (time: CFAbsoluteTime, bytes: Int64)?
     private var activeJob: UUID?
     private var timer: Timer?
+    private var webChatInputs = ChatInputCapabilities()
+    private lazy var webChat = WebChatServer(status: { [weak self] in
+        self?.webChatStatus() ?? WebChatStatus(model: nil, selection: nil, ready: false, message: "Open Lulu to connect.")
+    }, endpoint: { [weak self] in
+        guard let self else { throw LocalChatEndpoint.Failure(message: "Open Lulu to connect.") }
+        return try await self.localChatEndpoint()
+    })
 
     init() {
         let defaults = UserDefaults.standard
@@ -176,11 +241,17 @@ final class AppModel: ObservableObject {
     }
 
     private func configureMonitor() {
-        let serving = phase == .starting || phase == .ready
-        let interval: TimeInterval = monitoringActive ? (serving ? 1 : 5) : 10
-        guard timer == nil || interval != monitorInterval else { return }
+        let interval: TimeInterval
+        switch phase {
+        case .starting: interval = 1
+        case .ready: interval = metricsVisible ? 1 : monitoringActive && pane == .server ? 2 : 10
+        case .stopped, .failed: interval = metricsVisible ? 5 : 0
+        }
+        guard interval != monitorInterval else { return }
         timer?.invalidate()
+        timer = nil
         monitorInterval = interval
+        guard interval > 0 else { return }
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.tick() }
         }
@@ -224,12 +295,10 @@ final class AppModel: ObservableObject {
         engines = EngineCatalog.quick()
         guard !sizing else { return }
         sizing = true
-        Task.detached { [weak self] in
-            let sized = EngineCatalog.measured()
-            await MainActor.run {
-                self?.engines = sized
-                self?.sizing = false
-            }
+        Task {
+            let sized = await Task.detached(priority: .utility) { EngineCatalog.measured() }.value
+            engines = sized
+            sizing = false
         }
     }
 
@@ -248,7 +317,10 @@ final class AppModel: ObservableObject {
     }
 
     func rescanModels() async {
+        let requestID = UUID()
+        scanRequestID = requestID
         let found = await Task.detached(priority: .utility) { ModelScan.all() }.value
+        guard scanRequestID == requestID else { return }
         models = found
         if !models.contains(where: { $0.id == selectedModelID }) {
             selectedModelID = models.first?.id ?? ""
@@ -297,6 +369,30 @@ final class AppModel: ObservableObject {
         Task { await rescanModels() }
     }
 
+    func browseRecommendation(_ repo: String) {
+        repoQuery = repo
+        showModels(.discover)
+        searchHub()
+    }
+
+    func showModels(_ section: ModelSection) {
+        modelSection = section
+        pane = .models
+    }
+
+    func showModelRecommendations() {
+        showModels(.discover)
+        recommendationsRequest = UUID()
+    }
+
+    func browseRecommendation(_ choice: TrayRecommendation) {
+        repoQuery = choice.repo
+        showModels(.discover)
+        selectedHubHit = nil
+        hubHits = []
+        loadFiles(choice.repo, recommendation: choice)
+    }
+
     func searchHub() {
         showAllHubResults = false
         let query = repoQuery.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -340,11 +436,12 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func loadFiles(_ repo: String) {
+    func loadFiles(_ repo: String, recommendation: TrayRecommendation? = nil) {
         let requestID = UUID()
         hubRequestID = requestID
         listedRepo = ""
         listedFiles = []
+        searchFinished = false
         searching = true
         banner = nil
         let token = TokenStore.effective()
@@ -353,13 +450,13 @@ final class AppModel: ObservableObject {
                 async let metadata = try? Hub.metadata(repo: repo, token: token)
                 let files = try await Hub.files(repo: repo, token: token)
                 guard hubRequestID == requestID else { return }
-                let details = await metadata
-                guard hubRequestID == requestID else { return }
-                selectedHubHit = details ?? selectedHubHit
-                listedFiles = files
+                listedFiles = try recommendation?.selectFiles(files) ?? files
                 listedRepo = repo
                 searching = false
                 if listedFiles.isEmpty { banner = "This repository returned no files." }
+                let details = await metadata
+                guard hubRequestID == requestID else { return }
+                selectedHubHit = details ?? selectedHubHit
             } catch let error as HubError {
                 guard hubRequestID == requestID else { return }
                 searching = false
@@ -373,23 +470,53 @@ final class AppModel: ObservableObject {
     }
 
     func enqueueSelected() {
-        let chosen = listedFiles.filter(\.selected)
-        guard !listedRepo.isEmpty, !chosen.isEmpty else {
-            banner = "Select at least one file."
+        guard !listedRepo.isEmpty, hasDownloadableSelection else {
+            banner = "Choose a complete GGUF variant or MLX model."
             return
         }
-        let destination = Hub.destination(repo: listedRepo, files: chosen)
-        let job = DownloadJob(
-            id: UUID(),
-            repo: listedRepo,
-            destination: destination.path,
+        guard enqueueDownload(repo: listedRepo, files: listedFiles) else { return }
+        modelSection = .downloads
+        hubRequestID = UUID()
+        listedRepo = ""
+        listedFiles = []
+        selectedHubHit = nil
+        hubHits = []
+        searchFinished = false
+        banner = nil
+    }
+
+    @discardableResult
+    func enqueueDownload(repo: String, files: [ListedFile]) -> Bool {
+        guard Hub.parseRepo(repo) == repo, Hub.isDownloadable(files) else {
+            banner = "Choose a complete model before downloading."
+            return false
+        }
+        let chosen = files.filter(\.selected)
+        let destination = Hub.destination(repo: repo, files: chosen)
+        if jobs.contains(where: { $0.destination == destination.path && $0.state != .done }) {
+            banner = "A download already exists for this folder. Resume it or remove it before starting another."
+            return false
+        }
+        jobs.append(DownloadJob(
+            id: UUID(), repo: repo, destination: destination.path,
             files: chosen.map { DownloadPart(path: $0.path, size: $0.size, received: 0, done: false) },
-            state: .queued,
-            error: nil
-        )
-        jobs.append(job)
+            state: .queued, error: nil
+        ))
         persistDownloads()
         pump()
+        return true
+    }
+
+    func repository(for item: ModelItem) -> String? {
+        let path = URL(fileURLWithPath: item.path).standardizedFileURL.path
+        return jobs.last { job in
+            guard job.state == .done, Hub.parseRepo(job.repo) == job.repo else { return false }
+            let folder = URL(fileURLWithPath: job.destination).standardizedFileURL
+            if item.engineID != "llama.cpp" { return path == folder.path }
+            return job.files.contains {
+                $0.done && folder.appendingPathComponent($0.path).standardizedFileURL.path == path
+            }
+        }?.repo
     }
 
     func pauseDownload(_ id: UUID) {
@@ -423,17 +550,19 @@ final class AppModel: ObservableObject {
     }
 
     func startServer() {
-        guard phase == .stopped || phase == .failed else { return }
+        guard !purgingMemory else {
+            banner = "Wait for memory purge to finish before starting the server."
+            return
+        }
+        guard !switchingModel, phase == .stopped || phase == .failed else { return }
         guard let model = models.first(where: { $0.id == selectedModelID }) else {
             banner = "Choose a model."
             return
         }
-        #if arch(x86_64)
-        guard model.engineID == "llama.cpp" else {
-            banner = "MLX models require Apple Silicon. On Intel Macs, use GGUF with llama.cpp."
+        guard Machine.supportsMLX || model.engineID == "llama.cpp" else {
+            banner = "MLX models require Apple silicon. On Intel Macs, use GGUF with llama.cpp."
             return
         }
-        #endif
         guard contextLength > 0 else {
             banner = "Choose a context greater than zero."
             return
@@ -505,34 +634,91 @@ final class AppModel: ObservableObject {
     }
 
     func stopServer() {
+        guard !switchingModel else { return }
         let pid = releaseServer()
         guard pid > 0 else { return }
-        Task.detached {
-            MemoryMonitor.terminate(pid)
+        switchingModel = true
+        Task {
+            await Task.detached { MemoryMonitor.terminate(pid) }.value
+            switchingModel = false
         }
     }
 
-    func purge() {
-        let before = memory.available
+    func purge(onFinish: ((String) -> Void)? = nil) {
+        guard !switchingModel, !purgingMemory else { return }
+        purgingMemory = true
+        let before = MemoryMonitor.system().available
         let pid = releaseServer()
-        Task.detached { [weak self] in
-            if pid > 0 { MemoryMonitor.terminate(pid) }
-            let code = Shell.run(
-                executable: "/usr/bin/osascript",
-                arguments: ["-e", "do shell script \"/usr/sbin/purge\" with administrator privileges"]
-            ) { _ in }
-            let after = MemoryMonitor.system().available
-            await MainActor.run {
-                self?.tick()
-                if code == 0 {
-                    self?.banner = "Purge complete. Available memory changed from \(Format.bytes(before)) to \(Format.bytes(after))."
-                } else if pid > 0 {
-                    self?.banner = "Server stopped. System purge was canceled."
-                } else {
-                    self?.banner = "System purge was canceled."
-                }
+        Task {
+            let (code, after) = await Task.detached {
+                if pid > 0 { MemoryMonitor.terminate(pid) }
+                let code = Shell.run(
+                    executable: "/usr/bin/osascript",
+                    arguments: ["-e", "do shell script \"/usr/sbin/purge\" with administrator privileges"]
+                ) { _ in }
+                return (code, MemoryMonitor.system().available)
+            }.value
+            purgingMemory = false
+            tick()
+            let message: String
+            if code == 0 {
+                message = "Purge complete. Available memory changed from \(Format.bytes(before)) to \(Format.bytes(after))."
+            } else if pid > 0 {
+                message = "Server stopped. System purge was canceled."
+            } else {
+                message = "System purge was canceled."
             }
+            banner = message
+            onFinish?(message)
         }
+    }
+
+    func openWebChat(startSelected: Bool = true, onError: ((String) -> Void)? = nil) {
+        if startSelected, !serverActive, !switchingModel, !purgingMemory,
+           let selected = models.first(where: { $0.id == selectedModelID }) {
+            useModel(selected)
+        }
+        webChat.start { [weak self] result in
+            let message: String
+            switch result {
+            case .success(let url):
+                if NSWorkspace.shared.open(url) { return }
+                message = "The default browser could not open Lulu Chat."
+            case .failure(let error):
+                message = error.localizedDescription
+            }
+            self?.banner = message
+            onError?(message)
+        }
+    }
+
+    private func webChatStatus() -> WebChatStatus {
+        let item = serverActive ? runningModel : models.first { $0.id == selectedModelID }
+        let ready = phase == .ready && item != nil && !switchingModel
+        let message: String
+        if purgingMemory { message = "Lulu is freeing memory…" }
+        else if switchingModel || phase == .starting { message = "Loading the local model…" }
+        else if ready { message = "Ready on this Mac" }
+        else if phase == .failed || (pane == .engines && banner != nil) {
+            message = banner ?? "Start the model again in Lulu."
+        } else if item == nil { message = "Download and load a model in Lulu to start chatting." }
+        else { message = "Load a model in Lulu to start chatting." }
+        return WebChatStatus(model: item?.name, selection: item?.id, ready: ready, message: message,
+                             inputs: ready ? webChatInputs : ChatInputCapabilities(), appearance: .stored)
+    }
+
+    func localChatEndpoint() async throws -> LocalChatEndpoint {
+        guard phase == .ready, let item = runningModel else {
+            throw LocalChatEndpoint.Failure(message: "Start the local server before sending a message.")
+        }
+        let currentPort = port
+        let currentPID = serverPID
+        let modelID = await Probe.servedModelID(port: currentPort, path: item.path)
+        guard phase == .ready, currentPID == serverPID, currentPort == port, let modelID else {
+            throw LocalChatEndpoint.Failure(message: "The local server model is unavailable. Try again once it is ready.")
+        }
+        let key = item.engineID == "llama.cpp" ? AccessKeyStore.load() : ""
+        return LocalChatEndpoint(port: currentPort, modelID: modelID, key: key)
     }
 
     func copyEndpoint() {
@@ -569,31 +755,45 @@ final class AppModel: ObservableObject {
     }
 
     func configure(_ client: ClientID) {
-        guard let item = runningModel ?? models.first(where: { $0.id == selectedModelID }) else {
-            banner = "Choose a model before configuring \(client.title)."
-            return
-        }
-        if client == .cursor, CursorProcess.isRunning {
-            banner = "Close Cursor completely, then configure again. Cursor overwrites its settings while open."
-            return
-        }
+        guard configuringClient == nil, phase == .ready, let item = runningModel,
+              client.supports(engine: item.engineID) else { return }
         let currentPort = port
+        let currentPID = serverPID
         let context = contextLength
-        let vision = item.engineID == "mlx-vlm" || item.mmproj != nil
-        let name = item.name
-        let engineID = item.engineID
-        let path = item.path
-        let apiKey = AccessKeyStore.ensure()
-        accessKey = apiKey
+        let keyless = client == .openbot || (client == .pi && item.engineID != "llama.cpp")
+        let apiKey = keyless ? "" : AccessKeyStore.ensure()
+        configuringClient = client
         Task {
-            let live = await Probe.servedModelID(port: currentPort, path: path)
-            let modelID = live ?? OpenCodeClient.fallbackID(engineID: engineID, path: path)
-            let request = ClientRequest(
-                port: currentPort, modelID: modelID, displayName: name,
-                context: context, vision: vision, engineID: engineID, liveID: live != nil, apiKey: apiKey
-            )
+            defer { configuringClient = nil }
+            let modelID = await Probe.servedModelID(port: currentPort, path: item.path)
+            let reachable = await Probe.supports(port: currentPort, path: client.route, key: apiKey)
+            let vision = client == .pi
+                ? await Probe.chatInputs(for: item, port: currentPort).image
+                : item.engineID == "mlx-vlm" || item.mmproj != nil
+            guard phase == .ready, port == currentPort, serverPID == currentPID else { return }
+            guard let modelID, reachable else {
+                banner = "\(client.title) requires \(client.route). The current server could not verify that endpoint and its model."
+                return
+            }
+            let request = ClientRequest(port: currentPort, modelID: modelID, displayName: item.name,
+                                        context: context, vision: vision, apiKey: apiKey)
             do {
+                let openBot: URL?
+                if client == .openbot {
+                    guard let installed = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "app.openbot.desktop") else {
+                        throw ClientConfig.Failure(message: "Install OpenBot Desktop to connect it to Lulu.")
+                    }
+                    guard NSRunningApplication.runningApplications(withBundleIdentifier: "app.openbot.desktop").isEmpty else {
+                        throw ClientConfig.Failure(message: "Quit OpenBot, then click OpenBot in Lulu to apply the provider settings.")
+                    }
+                    openBot = installed
+                } else {
+                    openBot = nil
+                }
                 configuredNotice = ClientNotice(client: client, detail: try ClientConfig.apply(client, request))
+                if let openBot {
+                    _ = try await NSWorkspace.shared.openApplication(at: openBot, configuration: NSWorkspace.OpenConfiguration())
+                }
             } catch {
                 banner = error.localizedDescription
             }
@@ -617,8 +817,8 @@ final class AppModel: ObservableObject {
         let steps: [[String]]
         switch id {
         case "nativ":
-            guard major >= 26 else {
-                banner = "Nativ requires macOS 26 or later."
+            guard Machine.supportsMLX, major >= 26 else {
+                banner = "Nativ requires a Mac with Apple silicon and macOS 26 or later."
                 return
             }
             steps = [["install", "--cask", "nativ"]]
@@ -706,6 +906,7 @@ final class AppModel: ObservableObject {
         expectExit = true
         serverPID = 0
         serverProcess = nil
+        webChatInputs = ChatInputCapabilities()
         phase = .stopped
         baseline = nil
         memory.predictRate = nil
@@ -736,29 +937,31 @@ final class AppModel: ObservableObject {
         expectExit = false
     }
 
+    private func refreshLog() {
+        let tail = Format.tail(LuluPaths.log)
+        if tail != logText { logText = tail }
+    }
+
     private func tick() {
         if serverPID > 0, kill(serverPID, 0) != 0, !expectExit {
             serverPID = 0
             phase = .failed
             banner = "The engine stopped."
         }
-        if monitoringActive && (pane == .overview || pane == .speed) {
+        if metricsVisible {
             let next = makeSnapshot()
             if next != memory { memory = next }
         }
-        tickCount += 1
-        if monitoringActive && pane == .server && tickCount.isMultiple(of: 2) {
-            let tail = Format.tail(LuluPaths.log)
-            if tail != logText { logText = tail }
-        }
+        if monitoringActive && pane == .server && showServerLogs { refreshLog() }
         guard (phase == .starting || phase == .ready), !probeInFlight else { return }
         probeInFlight = true
         let currentPort = port
         let currentPID = serverPID
-        let llama = runningModel?.engineID == "llama.cpp"
+        let engineID = runningModel?.engineID
+        let measuresSpeed = metricsVisible && phase == .ready
         Task {
             let health = await Probe.classify(port: currentPort)
-            let speed = llama ? await Probe.speed(port: currentPort) : nil
+            let speed = measuresSpeed ? await Probe.speed(port: currentPort, engineID: engineID) : nil
             probeInFlight = false
             guard currentPID == serverPID, currentPort == port else { return }
             apply(health, speed)
@@ -804,12 +1007,21 @@ final class AppModel: ObservableObject {
         )
     }
 
-    private func apply(_ health: ServerPhase?, _ speed: (prompt: Double, predict: Double, peak: Int)?) {
+    private func apply(_ health: ServerPhase?, _ speed: EngineSpeed?) {
         if health == .ready, phase == .starting {
             phase = .ready
             if baseline == nil { baseline = serverPID > 0 ? MemoryMonitor.tree(of: serverPID).footprint : 0 }
+            if let item = runningModel {
+                let currentPort = port
+                let currentPID = serverPID
+                Task {
+                    let inputs = await Probe.chatInputs(for: item, port: currentPort)
+                    guard phase == .ready, serverPID == currentPID, item.id == runningModel?.id else { return }
+                    webChatInputs = inputs
+                }
+            }
         }
-        guard var copy = Optional(memory) else { return }
+        var copy = memory
         if let speed {
             copy.promptRate = speed.prompt
             copy.predictRate = speed.predict
@@ -855,6 +1067,7 @@ final class AppModel: ObservableObject {
             activeJob = nil
             downloadSpeed = 0
             persistDownloads()
+            pump()
         }
     }
 
@@ -924,101 +1137,5 @@ final class AppModel: ObservableObject {
     private func fileSize(_ url: URL) -> Int64? {
         guard let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize else { return nil }
         return Int64(size)
-    }
-}
-
-private enum Probe {
-    static let session: URLSession = {
-        let config = URLSessionConfiguration.ephemeral
-        config.timeoutIntervalForRequest = 0.4
-        config.timeoutIntervalForResource = 0.6
-        config.requestCachePolicy = .reloadIgnoringLocalCacheData
-        config.urlCache = nil
-        return URLSession(configuration: config)
-    }()
-
-    static func classify(port: Int) async -> ServerPhase? {
-        if let (code, data) = await get(port, "/health") {
-            if code == 503 { return .starting }
-            if code == 200 {
-                if let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let status = object["status"] as? String, status != "ok" {
-                    return .starting
-                }
-                return .ready
-            }
-        }
-        if let (code, _) = await get(port, "/v1/models"), code == 200 {
-            return .ready
-        }
-        return nil
-    }
-
-    static func servedModelID(port: Int, path: String) async -> String? {
-        guard let (code, data) = await get(port, "/v1/models"), code == 200,
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let rows = object["data"] as? [[String: Any]] else { return nil }
-        let ids = rows.compactMap { $0["id"] as? String }
-        let file = URL(fileURLWithPath: path)
-        let resolved = file.resolvingSymlinksInPath().path
-        let filename = file.lastPathComponent
-        let stem = file.deletingPathExtension().lastPathComponent
-        if let exact = ids.first(where: { $0 == resolved || $0 == path || $0 == filename || $0 == stem }) {
-            return exact
-        }
-        return ids.first { id in
-            let url = URL(fileURLWithPath: id)
-            return url.lastPathComponent == filename || url.deletingPathExtension().lastPathComponent == stem
-        }
-    }
-
-    static func speed(port: Int) async -> (prompt: Double, predict: Double, peak: Int)? {
-        guard let (code, data) = await get(port, "/metrics"), code == 200,
-              let text = String(data: data, encoding: .utf8) else { return nil }
-        var prompt = 0.0
-        var predict = 0.0
-        var peak = 0
-        var saw = false
-        for line in text.split(separator: "\n") where !line.hasPrefix("#") {
-            let parts = line.split(separator: " ")
-            guard parts.count >= 2, let value = Double(parts[1]) else { continue }
-            switch parts[0] {
-            case "llamacpp:prompt_tokens_seconds":
-                prompt = value
-                saw = true
-            case "llamacpp:predicted_tokens_seconds":
-                predict = value
-                saw = true
-            case "llamacpp:n_tokens_max":
-                peak = Int(value)
-                saw = true
-            default:
-                break
-            }
-        }
-        return saw ? (prompt, predict, peak) : nil
-    }
-
-    private static func get(_ port: Int, _ path: String) async -> (Int, Data)? {
-        guard let url = URL(string: "http://127.0.0.1:\(port)\(path)") else { return nil }
-        var request = URLRequest(url: url)
-        let key = AccessKeyStore.load().trimmingCharacters(in: .whitespacesAndNewlines)
-        if !key.isEmpty {
-            request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
-        }
-        guard let (data, response) = try? await session.data(for: request),
-              let http = response as? HTTPURLResponse else { return nil }
-        return (http.statusCode, data)
-    }
-}
-
-enum CursorProcess {
-    static var isRunning: Bool {
-        let running = NSRunningApplication.runningApplications(withBundleIdentifier: "com.todesktop.230313mzl4w4u92")
-        if !running.isEmpty { return true }
-        return !NSWorkspace.shared.runningApplications.filter {
-            ($0.bundleIdentifier?.localizedCaseInsensitiveContains("cursor") ?? false)
-                || (($0.localizedName ?? "").localizedCaseInsensitiveCompare("Cursor") == .orderedSame)
-        }.isEmpty
     }
 }
