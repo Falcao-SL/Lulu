@@ -21,6 +21,7 @@ struct LuluApp: App {
                 .frame(minWidth: 920, minHeight: 640)
                 .background(LuluWorkspaceWindow(lifecycle: lifecycle))
                 .preferredColorScheme(appearance.scheme)
+                .onAppear { lifecycle.installTray(model: model) }
         }
         .defaultSize(width: 1120, height: 800)
         .windowResizability(.contentMinSize)
@@ -45,14 +46,5 @@ struct LuluApp: App {
                 .background(LuluWorkspaceWindow(lifecycle: lifecycle))
         }
         .defaultSize(width: 850, height: 740)
-
-        MenuBarExtra {
-            LuluTray(model: model)
-                .preferredColorScheme(.dark)
-        } label: {
-            Image(nsImage: LuluTrayIcon.image)
-                .accessibilityLabel("Lulu")
-        }
-        .menuBarExtraStyle(.window)
     }
 }

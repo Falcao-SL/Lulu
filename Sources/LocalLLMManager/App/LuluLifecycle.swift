@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor
 final class LuluLifecycle: NSObject, NSApplicationDelegate {
     private let workspaceWindows = NSHashTable<NSWindow>.weakObjects()
+    private var tray: LuluStatusItem?
     var openWorkspace: ((String) -> Void)?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
@@ -19,6 +20,13 @@ final class LuluLifecycle: NSObject, NSApplicationDelegate {
             openWorkspace?("main")
         }
         return true
+    }
+
+    func installTray(model: AppModel) {
+        guard tray == nil else { return }
+        tray = LuluStatusItem(model: model) { [weak self] id in
+            self?.openWorkspace?(id)
+        }
     }
 
     func registerWorkspaceWindow(_ window: NSWindow) {

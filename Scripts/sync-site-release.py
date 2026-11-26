@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 API = "https://api.github.com/repos/Falcao-SL/Lulu/releases"
+SPARKLE = "{http://www.andymatuschak.org/xml-namespaces/sparkle}"
 
 
 def fetch(tag):
@@ -76,17 +77,27 @@ def main():
         sys.stdout.write(text)
     if appcasts_dir:
         assets = {item["name"]: item["browser_download_url"] for item in release.get("assets", [])}
-        for name in ("appcast-arm64.xml", "appcast-x86_64.xml"):
+        for arch in ("arm64", "x86_64"):
+            name = f"appcast-{arch}.xml"
             url = assets.get(name)
             if not url:
-                continue  # Existing releases predate Sparkle.
+                raise SystemExit(f"missing update feed: {name}")
             expected = f'https://github.com/Falcao-SL/Lulu/releases/download/{release["tag_name"]}/{name}'
             if url != expected:
                 raise SystemExit(f"refusing unexpected feed URL: {name}")
             with urllib.request.urlopen(url, timeout=30) as response:
                 data = response.read(256_001)
-            if len(data) > 256_000 or ET.fromstring(data).find("./channel/item/enclosure") is None:
-                raise SystemExit(f"invalid update feed: {name}")
+            if len(data) > 256_000:
+                raise SystemExit(f"oversized update feed: {name}")
+            item = ET.fromstring(data).find("./channel/item")
+            enclosure = item.find("enclosure") if item is not None else None
+            version = release["tag_name"].removeprefix("v")
+            installer = f"Lulu-{version}-macos-{arch}.dmg"
+            if (enclosure is None or installer not in assets
+                    or enclosure.get("url") != assets[installer]
+                    or item.findtext(f"{SPARKLE}shortVersionString") != version
+                    or not enclosure.get(f"{SPARKLE}edSignature")):
+                raise SystemExit(f"update feed does not match release: {name}")
             (appcasts_dir / name).write_bytes(data)
 
 

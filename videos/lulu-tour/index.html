@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="assets/gsap.min.js"></script>
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #e8f1e8; }
+#tour { position: relative; width: 1280px; height: 720px; overflow: hidden; }
+.window, .tray {
+  position: absolute;
+  height: auto;
+  border-radius: 14px;
+  box-shadow: 0 20px 44px #153c2e30;
+}
+.window { width: 875px; left: 202px; top: 46px; }
+.tray { width: 325px; left: 850px; top: 100px; }
+.menu-icon {
+  position: absolute;
+  top: 23px;
+  left: 1090px;
+  width: 53px;
+  height: 53px;
+  display: grid;
+  place-items: center;
+  background: #f8faf6;
+  border: 1px solid #cddbd0;
+  border-radius: 13px;
+}
+.menu-icon img { width: 32px; height: 32px; }
+.cursor, .pulse { position: absolute; top: 0; left: 0; pointer-events: none; }
+.cursor { z-index: 3; width: 36px; height: 41px; filter: drop-shadow(0 2px 2px #153c2e66); }
+.cursor::before, .cursor::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, 0 83%, 26% 64%, 46% 98%, 65% 87%, 45% 55%, 83% 52%);
+}
+.cursor::before { background: white; }
+.cursor::after { background: #172820; inset: 4px 5px 6px 4px; }
+.pulse {
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  border: 3px solid #3a8b65;
+  border-radius: 50%;
+  opacity: 0;
+}
+</style>
+</head>
+<body>
+<main id="tour" data-composition-id="tour" data-start="0" data-duration="9.6" data-width="1280" data-height="720">
+  <img id="overview" class="clip window" data-start="0" data-duration="1.2" data-track-index="0" src="assets/overview.webp" alt="Lulu Overview">
+  <img id="engines" class="clip window" data-start="1.2" data-duration="1.35" data-track-index="0" src="assets/engines.webp" alt="Inference engines">
+  <img id="models" class="clip window" data-start="2.55" data-duration="1.35" data-track-index="0" src="assets/models.webp" alt="Recommended models">
+  <img id="server" class="clip window" data-start="3.9" data-duration="1.35" data-track-index="0" src="assets/server.webp" alt="OpenAI-compatible local API">
+  <img id="performance" class="clip window" data-start="5.25" data-duration="4.35" data-track-index="0" src="assets/performance.webp" alt="Performance and memory">
+  <div class="menu-icon"><img src="assets/lulu.png" alt="Lulu menu-bar shortcut"></div>
+  <img id="menu-bar" class="clip tray" data-start="6.8" data-duration="2.8" data-track-index="1" src="assets/tray-dark.webp" alt="Lulu menu bar panel in Dark appearance">
+  <div class="pulse"></div>
+  <div class="cursor"></div>
+</main>
+<script>
+const tour = gsap.timeline({ paused: true });
+const cursor = '.cursor';
+const pulse = '.pulse';
+tour.set(cursor, { x: 580, y: 570, transformOrigin: 'top left' });
+
+for (const [time, x, y, duration] of [
+  [1.2, 253, 258, .62],
+  [2.55, 253, 190, .3],
+  [3.9, 253, 224, .3],
+  [5.25, 253, 293, .35],
+  [6.8, 1115, 49, .65]
+]) {
+  tour.to(cursor, { x, y, duration, ease: 'power2.inOut' }, time - duration);
+  tour.to(cursor, { scale: .78, duration: .06 }, time - .06);
+  tour.to(cursor, { scale: 1, duration: .13 }, time);
+  tour.fromTo(pulse, { x: x - 21, y: y - 21, scale: .38, opacity: .9 },
+    { scale: 1.28, opacity: 0, duration: .34, ease: 'power2.out', immediateRender: false }, time);
+}
+tour.to('#performance', { x: -86, duration: .32, ease: 'power2.out' }, 6.8);
+tour.fromTo('.tray', { x: 18, opacity: .25 }, { x: 0, opacity: 1, duration: .28, ease: 'power2.out' }, 6.8);
+tour.to(cursor, { x: 1184, y: 119, duration: .42, ease: 'power2.out' }, 7.2);
+window.__timelines = window.__timelines || {};
+window.__timelines["tour"] = tour;
+</script>
+</body>
+</html>

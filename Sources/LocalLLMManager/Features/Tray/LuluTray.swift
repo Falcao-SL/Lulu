@@ -13,8 +13,10 @@ private final class TrayState: ObservableObject {
 }
 
 struct LuluTray: View {
-    @Environment(\.openWindow) private var openWindow
+    @Environment(\.colorScheme) private var colorScheme
+    @AppStorage(LuluAppearance.preferenceKey) private var appearance = LuluAppearance.system
     @ObservedObject var model: AppModel
+    let openWorkspace: (String) -> Void
     @AppStorage("lulu.trayContexts") private var storedContexts = Data()
     @StateObject private var state = TrayState()
 
@@ -42,7 +44,7 @@ struct LuluTray: View {
             if let feedback = state.feedback {
                 Text(feedback)
                     .font(.caption)
-                    .foregroundStyle(TrayGlass.secondaryText)
+                    .foregroundStyle(TrayColors.secondaryText)
                     .textSelection(.enabled)
             }
             Divider()
@@ -50,8 +52,13 @@ struct LuluTray: View {
         }
         .padding(Space.lg)
         .frame(width: 345)
-        .modifier(TrayGlass())
+        .background {
+            if (appearance.scheme ?? colorScheme) == .dark {
+                Color.black.opacity(0.88)
+            }
+        }
         .tint(LuluTheme.accent)
+        .preferredColorScheme(appearance.scheme)
         .confirmationDialog("Delete this model?", isPresented: Binding(
             get: { state.deleteID != nil },
             set: { if !$0 { state.deleteID = nil } }
@@ -89,7 +96,7 @@ struct LuluTray: View {
             } label: {
                 trayRow("Browse models", subtitle: "Find models for this Mac", icon: "square.grid.2x2", trailing: "chevron.right")
             }
-            .buttonStyle(.plain)
+            .buttonStyle(TrayRowButtonStyle())
         }
     }
 
@@ -138,7 +145,7 @@ struct LuluTray: View {
                         else { Text(verbatim: "127.0.0.1:\(model.port)") }
                     } icon: {
                         Image(systemName: model.copied ? "checkmark" : "doc.on.doc")
-                            .foregroundStyle(TrayGlass.secondaryText)
+                            .foregroundStyle(TrayColors.secondaryText)
                     }
                     .font(.callout.monospaced())
                 }
@@ -174,7 +181,7 @@ struct LuluTray: View {
             }
             if model.models.isEmpty {
                 Text("Your downloaded models will appear here.")
-                    .font(.callout).foregroundStyle(TrayGlass.secondaryText)
+                    .font(.callout).foregroundStyle(TrayColors.secondaryText)
                     .padding(.vertical, Space.xs)
             }
             ForEach(model.models) { item in
@@ -190,7 +197,7 @@ struct LuluTray: View {
                         badges: modelBadges(item), trailing: "chevron.right"
                     )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(TrayRowButtonStyle())
                 .accessibilityHint("Show model controls")
             }
         }
@@ -220,7 +227,7 @@ struct LuluTray: View {
                             badges: [entry.size, entry.quantization],
                             trailing: busy ? "clock" : "arrow.down.to.line")
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(TrayRowButtonStyle())
                 .disabled(busy)
                 .accessibilityHint("Download \(entry.name) \(entry.quantization)")
             }
@@ -236,7 +243,7 @@ struct LuluTray: View {
             Button { model.showModels(.downloads); showWindow("main") } label: {
                 trayRow(job.repo, subtitle: downloadDescription(job), icon: "arrow.down.circle", trailing: "chevron.right")
             }
-            .buttonStyle(.plain)
+            .buttonStyle(TrayRowButtonStyle())
             .help("Manage download")
         }
     }
@@ -304,7 +311,7 @@ struct LuluTray: View {
                     Link(destination: url) {
                         trayRow("View on Hugging Face", icon: "arrow.up.right")
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(TrayRowButtonStyle())
                 } else {
                     actionRow("Find on Hugging Face", icon: "magnifyingglass") {
                         var url = URLComponents(string: "https://huggingface.co/models")!
@@ -342,7 +349,7 @@ struct LuluTray: View {
                 Text("Context length").font(.headline)
                 Text("· Memory estimate")
                     .font(.caption)
-                    .foregroundStyle(TrayGlass.secondaryText)
+                    .foregroundStyle(TrayColors.secondaryText)
                     .help("Model file size plus estimated KV cache. Actual use can be higher.")
                 Spacer()
                 Menu {
@@ -363,7 +370,7 @@ struct LuluTray: View {
                             Text(shortContext(tokens)).font(.caption.weight(.semibold))
                             Text(estimatedMemory(for: item, context: tokens))
                                 .font(.caption2.monospacedDigit())
-                                .foregroundStyle(TrayGlass.secondaryText)
+                                .foregroundStyle(TrayColors.secondaryText)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, Space.sm)
@@ -467,24 +474,24 @@ struct LuluTray: View {
                 Text(title).font(.callout.weight(.medium))
                     .lineLimit(subtitle == nil ? 1 : 2).truncationMode(.middle)
                 if let subtitle {
-                    Text(subtitle).font(.caption).foregroundStyle(TrayGlass.secondaryText).lineLimit(1)
+                    Text(subtitle).font(.caption).foregroundStyle(TrayColors.secondaryText).lineLimit(1)
                 }
             }
             Spacer(minLength: 0)
             ForEach(badges, id: \.self) { badge in
                 Text(badge)
                     .font(.caption2.monospaced())
-                    .foregroundStyle(TrayGlass.secondaryText)
+                    .foregroundStyle(TrayColors.secondaryText)
                     .padding(.horizontal, Space.xs)
                     .padding(.vertical, 2)
                     .background(.primary.opacity(0.08), in: Capsule())
                     .fixedSize()
             }
-            if let note { Text(note).font(.caption).foregroundStyle(TrayGlass.secondaryText) }
+            if let note { Text(note).font(.caption).foregroundStyle(TrayColors.secondaryText) }
             if let trailing {
                 Image(systemName: trailing)
                     .font(.caption)
-                    .foregroundStyle(TrayGlass.secondaryText)
+                    .foregroundStyle(TrayColors.secondaryText)
                     .accessibilityHidden(true)
             }
         }
@@ -496,7 +503,7 @@ struct LuluTray: View {
         Button(action: action) {
             trayRow(title, icon: icon, note: note)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TrayRowButtonStyle())
     }
 
     private var footer: some View {
@@ -504,10 +511,25 @@ struct LuluTray: View {
             Text([AppUpdates.current, engine?.name, engine?.version].compactMap { $0 }
                 .filter { !$0.isEmpty }.joined(separator: " · "))
                 .font(.caption.monospacedDigit())
-                .foregroundStyle(TrayGlass.secondaryText)
+                .foregroundStyle(TrayColors.secondaryText)
                 .lineLimit(1)
                 .truncationMode(.tail)
             Spacer(minLength: 0)
+            Menu {
+                Picker("Appearance", selection: Binding(get: { appearance }, set: { selection in
+                    appearance = selection
+                    selection.apply()
+                })) {
+                    ForEach(LuluAppearance.allCases, id: \.self) { mode in
+                        Label(mode.title, systemImage: mode.symbol).tag(mode)
+                    }
+                }
+            } label: {
+                Image(systemName: appearance.symbol)
+            }
+            .accessibilityLabel("Appearance")
+            .accessibilityValue(Text(appearance.title))
+            .help("Appearance")
             Button("Settings") { show(.server) }
             Button("Quit") { NSApp.terminate(nil) }
         }
@@ -527,7 +549,36 @@ struct LuluTray: View {
     }
 
     private func showWindow(_ id: String) {
-        LuluLifecycle.showWorkspace(id, using: openWindow)
+        openWorkspace(id)
+    }
+}
+
+private struct TrayRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Row(configuration: configuration)
+    }
+
+    private final class HoverState: ObservableObject {
+        @Published var isHovered = false
+    }
+
+    private struct Row: View {
+        @Environment(\.isEnabled) private var isEnabled
+        @StateObject private var hover = HoverState()
+        let configuration: Configuration
+
+        var body: some View {
+            configuration.label
+                .padding(.horizontal, LuluTheme.Space.xs)
+                .background {
+                    if isEnabled && (hover.isHovered || configuration.isPressed) {
+                        RoundedRectangle(cornerRadius: LuluTheme.Radius.control)
+                            .fill(Color.primary.opacity(configuration.isPressed ? 0.18 : 0.12))
+                    }
+                }
+                .contentShape(Rectangle())
+                .onHover { hover.isHovered = $0 }
+        }
     }
 }
 
@@ -597,7 +648,7 @@ private struct TrayRequestView: View {
             if example.requiresKey {
                 Text("Set LULU_API_KEY to the access key shown in Server.")
                     .font(.caption)
-                    .foregroundStyle(TrayGlass.secondaryText)
+                    .foregroundStyle(TrayColors.secondaryText)
             }
             Button(form.copied ? "Copied" : "Copy cURL", systemImage: form.copied ? "checkmark" : "doc.on.doc") {
                 copyTrayText(command)

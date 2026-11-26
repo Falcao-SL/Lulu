@@ -19,7 +19,7 @@
 - Built-in engines: mlx-lm, mlx-vlm and llama.cpp. llama.cpp installs through Homebrew. MLX installs through uv. Lulu does not install Homebrew or uv.
 - The engine catalog can install and open Ollama, LM Studio, Jan and GPT4All. Each of those apps keeps its own models and server.
 - Clients Lulu can configure: OpenCode, Cursor, Codex, Claude Code, Aider, Zed, Antigravity, OpenClaude and DeepSeek. mlx-lm does not serve /v1/responses or /v1/messages.
-- The app has no chat. It does not train models.
+- Lulu opens a local web chat and provides model and server controls from the macOS menu bar. It does not train models.
 - The local server listens on this Mac only. The default endpoint is http://127.0.0.1:8000/v1.
 - Inference stays on the Mac. Searching and downloading models, and installing engines, use the network. There is no analytics SDK and no crash reporter. Update checks run when the user asks.
 - Current downloads are listed in https://lulu.falcaosl.com/release.json and are replaced when a GitHub Release is published.

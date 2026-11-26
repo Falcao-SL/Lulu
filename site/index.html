@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f6f8f2">
 <title>Lulu: Lightweight Local LLM Manager for Mac | MLX, GGUF</title>
-<meta name="description" content="Run local LLMs on your Mac with a 3.1 MB native app. Manage MLX and GGUF models and engines, and serve an OpenAI-compatible API. Free and open source.">
+<meta name="description" content="Run local LLMs on your Mac with a native app. Manage MLX and GGUF models and engines, and serve an OpenAI-compatible API. Free and open source.">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://lulu.falcaosl.com/">
 <link rel="alternate" hreflang="en" href="https://lulu.falcaosl.com/">
@@ -20,7 +20,7 @@
 <meta property="og:image" content="https://lulu.falcaosl.com/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Lulu on a Mac, Overview open, no model loaded. Free, MIT, 3.1 MB, notarized.">
+<meta property="og:image:alt" content="Lulu on a Mac, with the Overview screen open.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Lulu: run local models, skip the heavy app">
 <meta name="twitter:description" content="A small native Mac app to manage MLX and llama.cpp engines, models and a local OpenAI-compatible API. Free, MIT.">
@@ -28,7 +28,7 @@
 <link rel="icon" href="icon.png">
 <link rel="stylesheet" href="style.css?v=20261118">
 <script src="release.js?v=20261116" defer></script>
-<script src="product-preview.js?v=1" defer></script>
+<script src="product-preview.js?v=2" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -42,8 +42,6 @@
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "macOS 14 or later",
       "processorRequirements": "Apple Silicon or Intel. MLX requires Apple Silicon.",
-      "softwareVersion": "2.0.21",
-      "fileSize": "3.1 MB",
       "downloadUrl": "https://github.com/Falcao-SL/Lulu/releases/latest",
       "installUrl": "https://github.com/Falcao-SL/Lulu/releases/latest",
       "releaseNotes": "https://github.com/Falcao-SL/Lulu/releases",
@@ -64,7 +62,7 @@
       "about": { "@id": "https://lulu.falcaosl.com/#app" },
       "mainEntity": [
         { "@type": "Question", "name": "Is Lulu free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Lulu is free and open source under the MIT license. The app has no account and no purchase." } },
-        { "@type": "Question", "name": "What does lightweight mean here?", "acceptedAnswer": { "@type": "Answer", "text": "The Apple Silicon download is 3.1 MB and the app has no chat. Engines install separately through Homebrew or uv, and models take whatever space they need. On one Apple M4 with 24 GB, the installed app was 6.5 MB on disk and used a 66 MB physical footprint while idle, with no model loaded." } },
+        { "@type": "Question", "name": "What does lightweight mean here?", "acceptedAnswer": { "@type": "Answer", "text": "Lulu is a native Mac app with a local web chat. Engines install separately through Homebrew or uv, and models take whatever space they need. On one Apple M4 with 24 GB, the installed app was 6.5 MB on disk and used a 66 MB physical footprint while idle, with no model loaded." } },
         { "@type": "Question", "name": "Which engines and model formats are supported?", "acceptedAnswer": { "@type": "Answer", "text": "mlx-lm and mlx-vlm for MLX models on Apple Silicon, and llama.cpp for GGUF models on Apple Silicon and Intel." } },
         { "@type": "Question", "name": "Do I need Homebrew or Python?", "acceptedAnswer": { "@type": "Answer", "text": "llama.cpp installs through Homebrew and the MLX engines through uv. Lulu does not install Homebrew or uv. If one is missing, Engines says so." } },
         { "@type": "Question", "name": "Does it work offline?", "acceptedAnswer": { "@type": "Answer", "text": "Inference runs on your Mac. Searching and downloading models, and installing engines, need an internet connection." } },
@@ -101,21 +99,20 @@
     <p class="eyebrow">FREE · OPEN SOURCE · MACOS</p>
     <h1>Your Mac.<br><em>Your local AI.</em></h1>
     
-    <p class="intro">Lulu is a 3.1 MB native Mac app. It installs inference engines, manages MLX and GGUF models, and serves them on an OpenAI-compatible API. There is no chat in the app.</p>
+    <p class="intro">Run MLX and GGUF models on your Mac. Chat locally or connect your tools through an OpenAI-compatible API.</p>
     <div class="actions">
       <a class="button primary" id="download" data-arch="arm" href="https://github.com/Falcao-SL/Lulu/releases/latest/download/Lulu-macos-arm64.dmg"><img class="platform-logo" src="apple.svg" width="20" height="20" alt=""> Download for Apple Silicon</a>
       <a class="button secondary" id="download-intel" data-arch="intel" href="https://github.com/Falcao-SL/Lulu/releases/latest/download/Lulu-macos-x86_64.dmg"><img class="platform-logo intel-logo" src="intel.svg" width="28" height="20" alt=""> Download for Intel Mac</a>
     </div>
-    <a class="watch-link" href="#video">See how to get started <span aria-hidden="true">↓</span></a><p class="requirement">Apple Silicon 3.1 MB · Intel 3.2 MB · macOS 14 or later · <span class="js-tag">v2.0.21</span></p>
+    <a class="watch-link" href="#demo">Watch the demo <span aria-hidden="true">↓</span></a><p class="requirement">macOS 14 or later · <span class="js-tag">Latest release</span></p>
   </div>
   <div class="product-preview" aria-label="Explore Lulu screens">
     <div class="preview-tabs" role="group" aria-label="Explore Lulu screens"><button type="button" data-screen="overview" aria-pressed="true">Overview</button><button type="button" data-screen="engines" aria-pressed="false">Engines</button><button type="button" data-screen="models" aria-pressed="false">Models</button><button type="button" data-screen="server" aria-pressed="false">Server</button></div>
-    <figure class="shot preview-screen"><picture><source id="preview-source" srcset="screens/overview.webp" type="image/webp"><img id="preview-image" src="screens/overview.png" width="2560" height="1640" alt="Explore Lulu screens"></picture></figure>
-    <p class="preview-note">Real Lulu screens, with the server stopped and no model loaded.</p>
+    <figure class="shot preview-screen"><picture><source id="preview-source" srcset="screens/overview.webp" type="image/webp"><img id="preview-image" src="screens/overview.png" width="2240" height="1600" alt="Explore Lulu screens"></picture></figure>
   </div>
 </section>
 
-<p class="proof wrap"><span>3.1 MB download</span><span>Native Swift app</span><span>MIT open source</span><span>Notarized by Apple</span><span>Apple Silicon and Intel</span></p>
+<p class="proof wrap"><span>Local chat</span><span>Native Swift app</span><span>MIT open source</span><span>Notarized by Apple</span><span>Apple Silicon and Intel</span></p>
 
 <section class="block wrap" id="small">
   <p class="eyebrow">SMALL BY DESIGN</p>
@@ -134,21 +131,33 @@
   <h2>Three steps. <em>Then the endpoint.</em></h2>
   <div class="trio">
     <figure class="shot">
-      <picture><source srcset="screens/engines.webp" type="image/webp"><img src="screens/engines.png" width="2560" height="1640" alt="Engines in Lulu. llama.cpp is installed. mlx-lm and mlx-vlm are available through uv. Ollama is in the catalog." loading="lazy"></picture>
+      <picture><source srcset="screens/engines.webp" type="image/webp"><img src="screens/engines.png" width="2240" height="1600" alt="Built-in and compatible engines in Lulu." loading="lazy"></picture>
       <figcaption><strong>1. Install an engine.</strong> Pick llama.cpp or MLX. Lulu installs it with Homebrew or uv and shows the log. It does not install Homebrew or uv if they are missing.</figcaption>
     </figure>
     <figure class="shot">
-      <picture><source srcset="screens/models.webp" type="image/webp"><img src="screens/models.png" width="2560" height="1640" alt="Models in Lulu, with Hugging Face search and an empty local library." loading="lazy"></picture>
+      <picture><source srcset="screens/models.webp" type="image/webp"><img src="screens/models.png" width="2240" height="1600" alt="Recommended models and Hugging Face search in Lulu." loading="lazy"></picture>
       <figcaption><strong>2. Get a model.</strong> Search Hugging Face or paste a repo. Downloads queue, pause and resume. MLX needs Apple Silicon. Intel Macs use GGUF.</figcaption>
     </figure>
     <figure class="shot">
-      <picture><source srcset="screens/server.webp" type="image/webp"><img src="screens/server.png" width="2560" height="1180" alt="Server in Lulu, stopped, with the local endpoint http://127.0.0.1:8000/v1." loading="lazy"></picture>
+      <picture><source srcset="screens/server.webp" type="image/webp"><img src="screens/server.png" width="2240" height="1600" alt="Local API endpoint and client setup in Lulu." loading="lazy"></picture>
       <figcaption><strong>3. Start the server.</strong> Choose a model, context and port. Copy <code>http://127.0.0.1:8000/v1</code> or let Lulu configure your tools.</figcaption>
     </figure>
   </div>
+  <section class="tray-feature">
+    <div class="tray-copy"><h3>Lulu in your menu bar</h3><p>Choose a model, open chat, or copy the API address without opening the main window. Lulu can keep running after you close the window.</p></div>
+    <div class="tray-previews">
+      <figure><img src="screens/tray-light.webp" width="690" height="1192" alt="Lulu in your menu bar · Light" loading="lazy"><figcaption>Light</figcaption></figure>
+      <figure><img src="screens/tray-dark.webp" width="690" height="1192" alt="Lulu in your menu bar · Dark" loading="lazy"><figcaption>Dark</figcaption></figure>
+    </div>
+  </section>
+  <figure class="shot video-shot demo-video" id="demo">
+    <video controls playsinline preload="none" poster="screens/tour-poster.jpg" width="1280" height="720" aria-label="Lulu product demo">
+      <source src="screens/tour.mp4" type="video/mp4">
+    </video>
+  </figure>
   <div class="video-intro" id="video"><p class="eyebrow">VIDEO · GETTING STARTED</p><h3>From a model to your first server.</h3><p>See how to get started with Lulu. Video text is in Portuguese.</p></div>
   <figure class="shot video-shot">
-    <video controls preload="none" poster="screens/lulu-comecar-poster.jpg" width="1280" height="820">
+    <video controls playsinline preload="none" poster="screens/lulu-comecar-poster.jpg" width="1920" height="1080">
       <source src="screens/lulu-comecar.mp4" type="video/mp4">
     </video>
     <figcaption>A visual guide using still images of Lulu; it does not show a recorded installation.</figcaption>
@@ -201,13 +210,13 @@
         <tr><th></th><th>Lulu</th><th>LM Studio</th><th>Ollama</th></tr>
       </thead>
       <tbody>
-        <tr><td>What it is</td><td data-h="Lulu">Native Mac app for engines, models and a local API. No chat.</td><td data-h="LM Studio">Desktop app with Bionic, an agent for documents, code and voice.</td><td data-h="Ollama">App and runtime for open models, on this machine or in the cloud.</td></tr>
+        <tr><td>What it is</td><td data-h="Lulu">Native Mac app for inference engines, models, local chat and an API.</td><td data-h="LM Studio">Desktop app with Bionic, an agent for documents, code and voice.</td><td data-h="Ollama">App and runtime for open models, on this machine or in the cloud.</td></tr>
         <tr><td>Mac installer</td><td data-h="Lulu">3.1 MB Apple Silicon, 3.2 MB Intel</td><td data-h="LM Studio">572.5 MB, Apple Silicon build</td><td data-h="Ollama">230.0 MB</td></tr>
         <tr><td>Engines</td><td data-h="Lulu">mlx-lm, mlx-vlm, llama.cpp</td><td data-h="LM Studio">MLX and llama.cpp</td><td data-h="Ollama">The Ollama app and command line</td></tr>
         <tr><td>OpenAI-compatible API</td><td data-h="Lulu">Yes, on 127.0.0.1</td><td data-h="LM Studio">Yes</td><td data-h="Ollama">Yes</td></tr>
         <tr><td>Intel Mac</td><td data-h="Lulu">Yes. GGUF with llama.cpp.</td><td data-h="LM Studio">No. Apple Silicon only on Mac.</td><td data-h="Ollama">Not confirmed for this page.</td></tr>
         <tr><td>Open source</td><td data-h="Lulu">Yes. MIT.</td><td data-h="LM Studio">Not stated on the product page.</td><td data-h="Ollama">Yes. MIT.</td></tr>
-        <tr><td>Built-in chat or agent</td><td data-h="Lulu">No chat.</td><td data-h="LM Studio">Yes. Bionic.</td><td data-h="Ollama">The app is a way to run models, including from the terminal.</td></tr>
+        <tr><td>Built-in chat or agent</td><td data-h="Lulu">Local chat in your browser.</td><td data-h="LM Studio">Yes. Bionic.</td><td data-h="Ollama">The app is a way to run models, including from the terminal.</td></tr>
       </tbody>
     </table>
   </div>
@@ -219,8 +228,8 @@
   <h2>Know what's running. <em>Make room when you need it.</em></h2>
   <p>The overview bar is memory for the whole Mac, not just Lulu. Weights are file sizes. KV figures are estimates. Token rates come from the engine. A dash means the value is not available.</p>
   <figure class="shot">
-    <picture><source srcset="screens/performance.webp" type="image/webp"><img src="screens/performance.png" width="2560" height="1640" alt="Lulu Performance with the server stopped. Mac memory is 24 GB, and the server process is zero." loading="lazy"></picture>
-    <figcaption>Lulu 2.0.21, server stopped, no model, Apple M4 with 24 GB, 16 Nov 2026.</figcaption>
+    <picture><source srcset="screens/performance.webp" type="image/webp"><img src="screens/performance.png" width="2240" height="1600" alt="Generation speed and unified memory in Lulu." loading="lazy"></picture>
+    <figcaption>Lulu shows generation speed and unified memory while a model runs.</figcaption>
   </figure>
 </section>
 
@@ -235,7 +244,7 @@
   <p class="eyebrow">FAQ</p>
   <h2>Questions worth answering first.</h2>
   <details open><summary>Is Lulu free?</summary><p>Yes. Lulu is free and open source under the MIT license. There is no account and no purchase in the app.</p></details>
-  <details><summary>What does lightweight mean here?</summary><p>The Apple Silicon download is 3.1 MB. The app has no chat. Engines install separately through Homebrew or uv, and models take the space they need. On the Mac measured above, the app bundle is 6.5 MB on disk and the idle footprint is 66 MB. That does not include a model.</p></details>
+  <details><summary>What does lightweight mean here?</summary><p>Lulu is a native Mac app with a local web chat. Engines install separately through Homebrew or uv, and models take the space they need. On the Mac measured above, the app bundle is 6.5 MB on disk and the idle footprint is 66 MB. That does not include a model.</p></details>
   <details><summary>Which engines and formats work?</summary><p>mlx-lm and mlx-vlm for MLX models, Apple Silicon only. llama.cpp for GGUF, on Apple Silicon and Intel.</p></details>
   <details><summary>Do I need Homebrew or uv?</summary><p>llama.cpp installs through Homebrew and MLX through uv. Lulu does not install either one. If one is missing, Engines says so.</p></details>
   <details><summary>Does it work offline?</summary><p>Inference runs on your Mac. Searching, downloading and installing engines need a connection.</p></details>
@@ -251,7 +260,7 @@
 <section class="download-section wrap">
   <p class="eyebrow">YOUR MAC. YOUR MODELS.</p>
   <h2>Your Mac. Your models. <em>One small app.</em></h2>
-  <p>Free · MIT · 3.1 MB · macOS 14 or later</p>
+  <p>Free · MIT · macOS 14 or later</p>
   <a class="button primary" id="download-bottom" data-arch="arm" href="https://github.com/Falcao-SL/Lulu/releases/latest/download/Lulu-macos-arm64.dmg"><img class="platform-logo" src="apple.svg" width="20" height="20" alt=""> Download for Apple Silicon</a>
   <a class="button secondary" id="download-intel-bottom" data-arch="intel" href="https://github.com/Falcao-SL/Lulu/releases/latest/download/Lulu-macos-x86_64.dmg"><img class="platform-logo intel-logo" src="intel.svg" width="28" height="20" alt=""> Download for Intel Mac</a>
   <p class="note"><a href="https://github.com/Falcao-SL/Lulu/releases">Read the release notes ↗</a></p>

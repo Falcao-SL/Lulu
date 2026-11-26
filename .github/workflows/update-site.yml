@@ -1,13 +1,11 @@
 # Release events produced by GITHUB_TOKEN do not trigger release workflows.
-# Publish the complete site after a successful release or a change to site/.
+# Publish the complete site after a successful release on main.
 name: Update product site
 
 on:
-  push:
-    branches: [main]
-    paths: ['site/**', 'Scripts/sync-site-release.py', '.github/workflows/update-site.yml']
   workflow_run:
     workflows: ['Release macOS']
+    branches: [main]
     types: [completed]
   workflow_dispatch:
 
@@ -29,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - name: Publish site and current downloads
         env:
           GITHUB_TOKEN: ${{ github.token }}
