@@ -32,9 +32,9 @@
       });
 
       const clip = mode === 'dark' ? 'tour-dark' : 'tour';
-      const url = `screens/${clip}.mp4`;
+      const url = `screens/${clip}.mp4?v=english`;
       if (source.getAttribute('src') !== url) {
-        demo.poster = `screens/${clip}-poster.jpg`;
+        demo.poster = `screens/${clip}-poster.jpg?v=english`;
         source.src = url;
         demo.load();
       }

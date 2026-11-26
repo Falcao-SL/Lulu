@@ -9,7 +9,6 @@
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://lulu.falcaosl.com/privacy.html">
 <link rel="alternate" hreflang="en" href="https://lulu.falcaosl.com/privacy.html">
-<link rel="alternate" hreflang="pt-BR" href="https://lulu.falcaosl.com/privacy.pt.html">
 <link rel="alternate" hreflang="x-default" href="https://lulu.falcaosl.com/privacy.html">
 <meta property="og:title" content="Lulu privacy">
 <meta property="og:description" content="What Lulu stores on your Mac, and when it uses the network.">
@@ -23,7 +22,7 @@
 <a class="skip" href="#content">Skip to content</a>
 <header class="nav wrap">
   <a class="brand" href="index.html"><img src="icon.png" width="28" height="28" alt="">Lulu</a>
-  <nav class="nav-links"><a class="nav-link" href="privacy.pt.html" hreflang="pt-BR" lang="pt-BR">PT</a><a class="nav-link" href="index.html">Home</a></nav>
+  <nav class="nav-links"><a class="nav-link" href="index.html">Home</a></nav>
 </header>
 <main class="privacy-main wrap" id="content">
   <p class="eyebrow">PRIVACY</p>
@@ -33,19 +32,19 @@
   <ul>
     <li>Models in <code>~/models/mlx</code> and <code>~/models/gguf</code>.</li>
     <li>Session data and logs in <code>~/.lulu/</code>.</li>
-    <li>An optional Hugging Face token, and the local server key, in macOS Keychain.</li>
+    <li>An optional model repository token, and the local server key, in macOS Keychain.</li>
   </ul>
   <h2>The local server</h2>
-  <p>The server listens on 127.0.0.1 only. Prompts and responses for that server stay on the Mac. llama.cpp is started with the Keychain key. mlx-lm and mlx-vlm are started without that flag. Clients that Lulu configures receive the same key.</p>
+  <p>The server listens on 127.0.0.1 only. Prompts and responses for that server stay on the Mac. Some engine configurations require the local server key. Clients that Lulu configures receive the key when needed.</p>
   <h2>When the network is used</h2>
   <ul>
-    <li>Searching and downloading models talks to Hugging Face.</li>
-    <li>Installing an engine uses Homebrew or uv, or opens the publisher's own download.</li>
-    <li>Check for updates, which you start from Overview, asks GitHub for the latest release. Installing that release uses Sparkle and the signed appcast on this site.</li>
+    <li>Searching and downloading models connects to the model repository.</li>
+    <li>Installing an engine can contact its package source or open the publisher’s download.</li>
+    <li>Check for updates, which you start from Overview, checks the latest release. The installer is verified against this site’s signed update feed.</li>
   </ul>
-  <p>There is no analytics SDK and no crash reporter in the app. Sparkle is set with automatic checks off and system-profile sending off. Lulu does not ask you to create an account.</p>
+  <p>There is no analytics SDK and no crash reporter in the app. Automatic update checks and system-profile sending are off. Lulu does not ask you to create an account.</p>
   <h2>This website</h2>
-  <p>lulu.falcaosl.com is a static site. It does not set a tracking cookie and it does not load an analytics script. Downloads go to GitHub Releases.</p>
+  <p>lulu.falcaosl.com is a static site. It does not set a tracking cookie and it does not load an analytics script. Downloads go to Lulu’s release page.</p>
   <p><a href="index.html">Back to Lulu</a></p>
 </main>
 <footer class="wrap footer">

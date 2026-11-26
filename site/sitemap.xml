@@ -2,30 +2,14 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://lulu.falcaosl.com/</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://lulu.falcaosl.com/"/>
-    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://lulu.falcaosl.com/index.pt.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://lulu.falcaosl.com/"/>
-  </url>
-  <url>
-    <loc>https://lulu.falcaosl.com/index.pt.html</loc>
-    <lastmod>2026-11-16</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://lulu.falcaosl.com/"/>
-    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://lulu.falcaosl.com/index.pt.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://lulu.falcaosl.com/"/>
   </url>
   <url>
     <loc>https://lulu.falcaosl.com/privacy.html</loc>
-    <lastmod>2026-11-16</lastmod>
+    <lastmod>2026-11-26</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://lulu.falcaosl.com/privacy.html"/>
-    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://lulu.falcaosl.com/privacy.pt.html"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://lulu.falcaosl.com/privacy.html"/>
-  </url>
-  <url>
-    <loc>https://lulu.falcaosl.com/privacy.pt.html</loc>
-    <lastmod>2026-11-16</lastmod>
-    <xhtml:link rel="alternate" hreflang="en" href="https://lulu.falcaosl.com/privacy.html"/>
-    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://lulu.falcaosl.com/privacy.pt.html"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://lulu.falcaosl.com/privacy.html"/>
   </url>
 </urlset>

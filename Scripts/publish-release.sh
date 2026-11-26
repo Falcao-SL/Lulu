@@ -54,7 +54,7 @@ ensure_draft() {
   if "${release[@]}" view "$tag" --json isDraft >/dev/null 2>&1; then return 0; fi
   "${release[@]}" create "$tag" --draft --target "${GITHUB_SHA:?Missing commit SHA}" \
     --title "Lulu ${VERSION}" --generate-notes --notes \
-    "Requires macOS 14 or later. MLX requires Apple Silicon. Intel Macs can run GGUF models with llama.cpp. Installers are Developer ID signed and notarized by Apple."
+    "Requires macOS 14 or later. MLX requires Apple Silicon. Intel Macs support GGUF models. Installers are Developer ID signed and notarized by Apple."
 }
 
 retry ensure_draft

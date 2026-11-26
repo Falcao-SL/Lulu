@@ -4,22 +4,21 @@
   const buttons = document.querySelectorAll('[data-screen]');
   if (!source || !image) return;
   const descriptions = {
-    overview: ['Overview screen in Lulu', 'Tela Visão geral do Lulu'],
-    engines: ['Engines screen in Lulu', 'Tela de motores do Lulu'],
-    models: ['Models screen in Lulu', 'Tela de modelos do Lulu'],
-    server: ['Server screen in Lulu', 'Tela do servidor do Lulu']
+    overview: 'Overview screen in Lulu',
+    engines: 'Engines screen in Lulu',
+    models: 'Models screen in Lulu',
+    server: 'Server screen in Lulu'
   };
-  const language = document.documentElement.lang.startsWith('pt') ? 1 : 0;
   let screen = 'overview';
 
   function update() {
     const dark = document.documentElement.dataset.appearance === 'dark';
-    source.srcset = `screens/${screen}${dark ? '-dark' : ''}.webp`;
-    image.src = `screens/${screen}.png`;
-    image.alt = descriptions[screen][language];
+    source.srcset = `screens/${screen}${dark ? '-dark' : ''}.webp?v=english`;
+    image.src = `screens/${screen}.png?v=english`;
+    image.alt = descriptions[screen];
     buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.screen === screen)));
     document.querySelectorAll('[data-themed-screen]').forEach((item) => {
-      item.srcset = `screens/${item.dataset.themedScreen}${dark ? '-dark' : ''}.webp`;
+      item.srcset = `screens/${item.dataset.themedScreen}${dark ? '-dark' : ''}.webp?v=english`;
     });
   }
 
