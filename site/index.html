@@ -28,7 +28,8 @@
 <link rel="icon" href="icon.png">
 <link rel="stylesheet" href="style.css?v=20261118">
 <script src="release.js?v=20261116" defer></script>
-<script src="product-preview.js?v=2" defer></script>
+<script src="appearance.js?v=1"></script>
+<script src="product-preview.js?v=3" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -91,15 +92,24 @@
     <a class="nav-link" href="https://github.com/Falcao-SL/Lulu#readme">Docs ↗</a>
     <a class="nav-link" href="https://github.com/Falcao-SL/Lulu">GitHub ↗</a>
     <a class="nav-link" href="index.pt.html" hreflang="pt-BR" lang="pt-BR">PT</a>
+    <div class="appearance-control" data-appearance-control hidden>
+      <label for="site-appearance">Appearance</label>
+      <select id="site-appearance">
+        <option value="system">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+      <output for="site-appearance" aria-live="polite" data-light="Active theme · Light" data-dark="Active theme · Dark"></output>
+    </div>
   </nav>
 </header>
 <main id="content">
 <section class="hero wrap">
   <div class="hero-copy">
     <p class="eyebrow">FREE · OPEN SOURCE · MACOS</p>
-    <h1>Your Mac.<br><em>Your local AI.</em></h1>
+    <h1>Run AI locally <em>on your Mac.</em></h1>
     
-    <p class="intro">Run MLX and GGUF models on your Mac. Chat locally or connect your tools through an OpenAI-compatible API.</p>
+    <p class="intro">Put your Mac’s power to work. Download and run AI models, chat locally, or connect your tools through an OpenAI-compatible API. Lulu is free and open source.</p>
     <div class="actions">
       <a class="button primary" id="download" data-arch="arm" href="https://github.com/Falcao-SL/Lulu/releases/latest/download/Lulu-macos-arm64.dmg"><img class="platform-logo" src="apple.svg" width="20" height="20" alt=""> Download for Apple Silicon</a>
       <a class="button secondary" id="download-intel" data-arch="intel" href="https://github.com/Falcao-SL/Lulu/releases/latest/download/Lulu-macos-x86_64.dmg"><img class="platform-logo intel-logo" src="intel.svg" width="28" height="20" alt=""> Download for Intel Mac</a>
@@ -131,23 +141,23 @@
   <h2>Three steps. <em>Then the endpoint.</em></h2>
   <div class="trio">
     <figure class="shot">
-      <picture><source srcset="screens/engines.webp" type="image/webp"><img src="screens/engines.png" width="2240" height="1600" alt="Built-in and compatible engines in Lulu." loading="lazy"></picture>
+      <picture><source data-themed-screen="engines" srcset="screens/engines.webp" type="image/webp"><img src="screens/engines.png" width="2240" height="1600" alt="Built-in and compatible engines in Lulu." loading="lazy"></picture>
       <figcaption><strong>1. Install an engine.</strong> Pick llama.cpp or MLX. Lulu installs it with Homebrew or uv and shows the log. It does not install Homebrew or uv if they are missing.</figcaption>
     </figure>
     <figure class="shot">
-      <picture><source srcset="screens/models.webp" type="image/webp"><img src="screens/models.png" width="2240" height="1600" alt="Recommended models and Hugging Face search in Lulu." loading="lazy"></picture>
+      <picture><source data-themed-screen="models" srcset="screens/models.webp" type="image/webp"><img src="screens/models.png" width="2240" height="1600" alt="Recommended models and Hugging Face search in Lulu." loading="lazy"></picture>
       <figcaption><strong>2. Get a model.</strong> Search Hugging Face or paste a repo. Downloads queue, pause and resume. MLX needs Apple Silicon. Intel Macs use GGUF.</figcaption>
     </figure>
     <figure class="shot">
-      <picture><source srcset="screens/server.webp" type="image/webp"><img src="screens/server.png" width="2240" height="1600" alt="Local API endpoint and client setup in Lulu." loading="lazy"></picture>
+      <picture><source data-themed-screen="server" srcset="screens/server.webp" type="image/webp"><img src="screens/server.png" width="2240" height="1600" alt="Local API endpoint and client setup in Lulu." loading="lazy"></picture>
       <figcaption><strong>3. Start the server.</strong> Choose a model, context and port. Copy <code>http://127.0.0.1:8000/v1</code> or let Lulu configure your tools.</figcaption>
     </figure>
   </div>
   <section class="tray-feature">
     <div class="tray-copy"><h3>Lulu in your menu bar</h3><p>Choose a model, open chat, or copy the API address without opening the main window. Lulu can keep running after you close the window.</p></div>
     <div class="tray-previews">
-      <figure><img src="screens/tray-light.webp" width="690" height="1192" alt="Lulu in your menu bar · Light" loading="lazy"><figcaption>Light</figcaption></figure>
-      <figure><img src="screens/tray-dark.webp" width="690" height="1192" alt="Lulu in your menu bar · Dark" loading="lazy"><figcaption>Dark</figcaption></figure>
+      <figure data-tray-theme="light"><img src="screens/tray-light.webp" width="690" height="1192" alt="Lulu in your menu bar · Light" loading="lazy"><figcaption>Light</figcaption></figure>
+      <figure data-tray-theme="dark"><img src="screens/tray-dark.webp" width="690" height="1192" alt="Lulu in your menu bar · Dark" loading="lazy"><figcaption>Dark</figcaption></figure>
     </div>
   </section>
   <figure class="shot video-shot demo-video" id="demo">
@@ -168,7 +178,7 @@
   <article><span class="number">01 / ENGINES AND MODELS</span><h3>mlx-lm, mlx-vlm, llama.cpp.</h3><p>Install the built-in engines, then find, download and organize MLX and GGUF models from Hugging Face. The catalog can also install Ollama, LM Studio, Jan and GPT4All. Those apps keep their own models and servers.</p></article>
   <article><span class="number">02 / LOCAL API</span><h3>One Mac. One endpoint.</h3><p>Serve a downloaded model on an OpenAI-compatible API that listens only on 127.0.0.1. llama.cpp requires the access key Lulu stores in Keychain. Configured clients receive that key. mlx-lm and mlx-vlm are started without it.</p></article>
   <article><span class="number">03 / YOUR TOOLS</span><h3>Point the editor at the Mac.</h3><p>One click writes the local server into OpenCode, Cursor, Codex, Claude Code, Aider, Zed, Antigravity, OpenClaude and DeepSeek. mlx-lm does not serve <code>/v1/responses</code> or <code>/v1/messages</code>, and Lulu says so for Codex and Claude Code.</p></article>
-  <article><span class="number">04 / MEMORY</span><h3>Make room, with a password.</h3><p>Purge stops the server, releases the model and asks macOS to free inactive memory. It needs an administrator password. The amount freed depends on the rest of the system.</p></article>
+  <article><span class="number">04 / MEMORY</span><h3>Free up memory with Purge.</h3><p>Purge stops the server, releases the model and asks macOS to free inactive memory. It needs an administrator password. The amount freed depends on the rest of the system.</p></article>
   <article><span class="number">05 / PERFORMANCE</span><h3>Weights, KV, context, tok/s.</h3><p>See process memory, model weights, KV cache and context. Tokens per second show up when the engine reports them. Lulu shows a dash when a value is not available.</p></article>
   <article><span class="number">06 / THIS MAC</span><h3>Inference stays here.</h3><p>Prompts and responses stay on your Mac. Model search, downloads and engine installs use the network. The app does not include a chat, and it does not train models.</p></article>
 </section>
@@ -225,10 +235,11 @@
 
 <section class="block wrap" id="memory">
   <p class="eyebrow">MEMORY</p>
-  <h2>Know what's running. <em>Make room when you need it.</em></h2>
-  <p>The overview bar is memory for the whole Mac, not just Lulu. Weights are file sizes. KV figures are estimates. Token rates come from the engine. A dash means the value is not available.</p>
+  <h2>Unlock the power of your Mac.</h2>
+  <p>See how fast your model is generating and how much unified memory your Mac is using. Lulu also shows the model’s memory footprint, context length, and estimated KV cache.</p>
+  <p class="guide-note purge-note"><strong>Free up memory with Purge.</strong> From the main window or menu bar, Purge stops the local server, unloads the model, and asks macOS to reclaim inactive memory. macOS requests administrator authorization. How much memory becomes available depends on the system.</p>
   <figure class="shot">
-    <picture><source srcset="screens/performance.webp" type="image/webp"><img src="screens/performance.png" width="2240" height="1600" alt="Generation speed and unified memory in Lulu." loading="lazy"></picture>
+    <picture><source data-themed-screen="performance" srcset="screens/performance.webp" type="image/webp"><img src="screens/performance.png" width="2240" height="1600" alt="Generation speed and unified memory in Lulu." loading="lazy"></picture>
     <figcaption>Lulu shows generation speed and unified memory while a model runs.</figcaption>
   </figure>
 </section>

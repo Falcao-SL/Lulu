@@ -46,21 +46,33 @@ html, body { margin: 0; background: #e8f1e8; }
   border-radius: 50%;
   opacity: 0;
 }
+#tour.dark { background: #18251e; }
+#tour.dark .menu-icon { background: #273b2f; border-color: #526858; }
+#tour.dark .pulse { border-color: #a1efc3; }
 </style>
 </head>
 <body>
-<main id="tour" data-composition-id="tour" data-start="0" data-duration="9.6" data-width="1280" data-height="720">
+<main id="tour" data-composition-id="tour" data-start="0" data-duration="9.6" data-width="1280" data-height="720" data-composition-variables='[{"id":"appearance","type":"string","label":"Appearance (light or dark)","default":"light"}]'>
   <img id="overview" class="clip window" data-start="0" data-duration="1.2" data-track-index="0" src="assets/overview.webp" alt="Lulu Overview">
   <img id="engines" class="clip window" data-start="1.2" data-duration="1.35" data-track-index="0" src="assets/engines.webp" alt="Inference engines">
   <img id="models" class="clip window" data-start="2.55" data-duration="1.35" data-track-index="0" src="assets/models.webp" alt="Recommended models">
   <img id="server" class="clip window" data-start="3.9" data-duration="1.35" data-track-index="0" src="assets/server.webp" alt="OpenAI-compatible local API">
   <img id="performance" class="clip window" data-start="5.25" data-duration="4.35" data-track-index="0" src="assets/performance.webp" alt="Performance and memory">
   <div class="menu-icon"><img src="assets/lulu.png" alt="Lulu menu-bar shortcut"></div>
-  <img id="menu-bar" class="clip tray" data-start="6.8" data-duration="2.8" data-track-index="1" src="assets/tray-dark.webp" alt="Lulu menu bar panel in Dark appearance">
+  <img id="menu-bar" class="clip tray" data-start="6.8" data-duration="2.8" data-track-index="1" src="assets/tray-light.webp" alt="Lulu menu bar panel">
   <div class="pulse"></div>
   <div class="cursor"></div>
 </main>
 <script>
+const appearance = window.__hyperframes?.getVariables?.()?.appearance;
+if (appearance === 'dark') {
+  document.getElementById('tour').classList.add('dark');
+  document.querySelectorAll('.window').forEach((screen) => {
+    screen.src = `assets/${screen.id}-dark.webp`;
+  });
+  document.getElementById('menu-bar').src = 'assets/tray-dark.webp';
+}
+
 const tour = gsap.timeline({ paused: true });
 const cursor = '.cursor';
 const pulse = '.pulse';

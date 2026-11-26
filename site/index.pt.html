@@ -28,7 +28,8 @@
 <link rel="icon" href="icon.png">
 <link rel="stylesheet" href="style.css?v=20261118">
 <script src="release.js?v=20261116" defer></script>
-<script src="product-preview.js?v=2" defer></script>
+<script src="appearance.js?v=1"></script>
+<script src="product-preview.js?v=3" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -70,15 +71,24 @@
     <a class="nav-link" href="https://github.com/Falcao-SL/Lulu/blob/main/docs/guia.md">Guia ↗</a>
     <a class="nav-link" href="https://github.com/Falcao-SL/Lulu">GitHub ↗</a>
     <a class="nav-link" href="index.html" hreflang="en" lang="en">EN</a>
+    <div class="appearance-control" data-appearance-control hidden>
+      <label for="site-appearance">Aparência</label>
+      <select id="site-appearance">
+        <option value="system">Sistema</option>
+        <option value="light">Claro</option>
+        <option value="dark">Escuro</option>
+      </select>
+      <output for="site-appearance" aria-live="polite" data-light="Tema ativo · Claro" data-dark="Tema ativo · Escuro"></output>
+    </div>
   </nav>
 </header>
 <main id="content">
 <section class="hero wrap">
   <div class="hero-copy">
     <p class="eyebrow">GRÁTIS · CÓDIGO ABERTO · MACOS</p>
-    <h1>Seu Mac.<br><em>Sua IA local.</em></h1>
+    <h1>Rode IA local <em>no Mac.</em></h1>
     
-    <p class="intro">Rode modelos MLX e GGUF no Mac. Converse no chat local ou conecte suas ferramentas a uma API compatível com a OpenAI.</p>
+    <p class="intro">Coloque a potência do seu Mac para trabalhar. Baixe e rode modelos de IA, converse no chat local ou conecte suas ferramentas pela API compatível com a OpenAI. O Lulu é gratuito e de código aberto.</p>
     <div class="actions">
       <a class="button primary" id="download" data-arch="arm" href="https://github.com/Falcao-SL/Lulu/releases/latest/download/Lulu-macos-arm64.dmg"><img class="platform-logo" src="apple.svg" width="20" height="20" alt=""> Baixar para Apple Silicon</a>
       <a class="button secondary" id="download-intel" data-arch="intel" href="https://github.com/Falcao-SL/Lulu/releases/latest/download/Lulu-macos-x86_64.dmg"><img class="platform-logo intel-logo" src="intel.svg" width="28" height="20" alt=""> Baixar para Mac Intel</a>
@@ -110,23 +120,23 @@
   <h2>Três passos. <em>Depois o endpoint.</em></h2>
   <div class="trio">
     <figure class="shot">
-      <picture><source srcset="screens/engines.webp" type="image/webp"><img src="screens/engines.png" width="2240" height="1600" alt="Motores integrados e compatíveis no Lulu." loading="lazy"></picture>
+      <picture><source data-themed-screen="engines" srcset="screens/engines.webp" type="image/webp"><img src="screens/engines.png" width="2240" height="1600" alt="Motores integrados e compatíveis no Lulu." loading="lazy"></picture>
       <figcaption><strong>1. Instale um motor.</strong> Escolha llama.cpp ou MLX. O Lulu instala com Homebrew ou uv e mostra o log. Ele não instala Homebrew nem uv se faltarem.</figcaption>
     </figure>
     <figure class="shot">
-      <picture><source srcset="screens/models.webp" type="image/webp"><img src="screens/models.png" width="2240" height="1600" alt="Modelos recomendados e busca no Hugging Face no Lulu." loading="lazy"></picture>
+      <picture><source data-themed-screen="models" srcset="screens/models.webp" type="image/webp"><img src="screens/models.png" width="2240" height="1600" alt="Modelos recomendados e busca no Hugging Face no Lulu." loading="lazy"></picture>
       <figcaption><strong>2. Baixe um modelo.</strong> Busque no Hugging Face ou cole um repositório. A fila pausa e continua. MLX precisa de Apple Silicon. Mac Intel usa GGUF.</figcaption>
     </figure>
     <figure class="shot">
-      <picture><source srcset="screens/server.webp" type="image/webp"><img src="screens/server.png" width="2240" height="1600" alt="Endpoint da API local e configuração de clientes no Lulu." loading="lazy"></picture>
+      <picture><source data-themed-screen="server" srcset="screens/server.webp" type="image/webp"><img src="screens/server.png" width="2240" height="1600" alt="Endpoint da API local e configuração de clientes no Lulu." loading="lazy"></picture>
       <figcaption><strong>3. Inicie o servidor.</strong> Escolha modelo, contexto e porta. Copie <code>http://127.0.0.1:8000/v1</code> ou deixe o Lulu configurar as ferramentas.</figcaption>
     </figure>
   </div>
   <section class="tray-feature">
     <div class="tray-copy"><h3>O Lulu na barra de menus</h3><p>Escolha um modelo, abra o chat ou copie o endereço da API sem abrir a janela principal. O Lulu pode continuar rodando depois que você fecha a janela.</p></div>
     <div class="tray-previews">
-      <figure><img src="screens/tray-light.webp" width="690" height="1192" alt="O Lulu na barra de menus · Claro" loading="lazy"><figcaption>Claro</figcaption></figure>
-      <figure><img src="screens/tray-dark.webp" width="690" height="1192" alt="O Lulu na barra de menus · Escuro" loading="lazy"><figcaption>Escuro</figcaption></figure>
+      <figure data-tray-theme="light"><img src="screens/tray-light.webp" width="690" height="1192" alt="O Lulu na barra de menus · Claro" loading="lazy"><figcaption>Claro</figcaption></figure>
+      <figure data-tray-theme="dark"><img src="screens/tray-dark.webp" width="690" height="1192" alt="O Lulu na barra de menus · Escuro" loading="lazy"><figcaption>Escuro</figcaption></figure>
     </div>
   </section>
   <figure class="shot video-shot demo-video" id="demo">
@@ -147,9 +157,9 @@
   <article><span class="number">01 / MOTORES E MODELOS</span><h3>mlx-lm, mlx-vlm, llama.cpp.</h3><p>Instale os motores integrados e organize modelos MLX e GGUF do Hugging Face. O catálogo também instala Ollama, LM Studio, Jan e GPT4All. Esses apps continuam donos dos próprios modelos e do próprio servidor.</p></article>
   <article><span class="number">02 / API LOCAL</span><h3>Um Mac. Um endpoint.</h3><p>Sirva um modelo baixado em uma API compatível com a OpenAI, só em 127.0.0.1. O llama.cpp exige a chave que o Lulu guarda no Keychain. Os clientes configurados recebem essa chave. mlx-lm e mlx-vlm sobem sem ela.</p></article>
   <article><span class="number">03 / SUAS FERRAMENTAS</span><h3>Aponte o editor para o Mac.</h3><p>Um clique grava o servidor local no OpenCode, Cursor, Codex, Claude Code, Aider, Zed, Antigravity, OpenClaude e DeepSeek. O mlx-lm não serve <code>/v1/responses</code> nem <code>/v1/messages</code>, e o Lulu avisa no Codex e no Claude Code.</p></article>
-  <article><span class="number">04 / MEMÓRIA</span><h3>Abrir espaço, com senha.</h3><p>A limpeza para o servidor, solta o modelo e pede ao macOS para liberar memória inativa. Exige senha de administrador. O quanto sai depende do resto do sistema.</p></article>
+  <article><span class="number">04 / MEMÓRIA</span><h3>Libere memória com o Purge.</h3><p>O Purge encerra o servidor, descarrega o modelo e pede ao macOS para liberar memória inativa. A liberação de memória do sistema pede autorização de administrador.</p></article>
   <article><span class="number">05 / DESEMPENHO</span><h3>Pesos, KV, contexto, tok/s.</h3><p>Veja a memória do processo, os pesos, o cache KV e o contexto. Tokens por segundo aparecem quando o motor informa. O Lulu mostra um traço quando o valor não existe.</p></article>
-  <article><span class="number">06 / ESTE MAC</span><h3>A inferência fica aqui.</h3><p>Perguntas e respostas ficam no seu Mac. Busca, download e instalação de motores usam a rede. O app não traz chat e não treina modelos.</p></article>
+  <article><span class="number">06 / ESTE MAC</span><h3>A inferência fica aqui.</h3><p>Perguntas e respostas ficam no seu Mac. Busca, download e instalação de motores usam a rede. O chat roda no navegador e usa o servidor local do Lulu.</p></article>
 </section>
 
 <section class="block wrap" id="conectar">
@@ -204,10 +214,11 @@
 
 <section class="block wrap" id="memoria">
   <p class="eyebrow">MEMÓRIA</p>
-  <h2>Veja o que está rodando. <em>Abra espaço quando precisar.</em></h2>
-  <p>A barra da visão geral é a memória do Mac inteiro, não só do Lulu. Pesos são tamanho de arquivo. Os números de KV são estimativas. A taxa de tokens vem do motor. Um traço significa que o valor não está disponível.</p>
+  <h2>Libere todo o poder do seu Mac.</h2>
+  <p>Acompanhe a velocidade de geração e o uso da memória unificada do Mac. O Lulu também mostra a memória usada pelo modelo, o tamanho do contexto e a estimativa do cache KV.</p>
+  <p class="guide-note purge-note"><strong>Libere memória com o Purge.</strong> Na janela principal ou na barra de menus, o Purge encerra o servidor local, descarrega o modelo e pede ao macOS para liberar memória inativa. O macOS solicita autorização de administrador. A quantidade liberada depende do estado do sistema.</p>
   <figure class="shot">
-    <picture><source srcset="screens/performance.webp" type="image/webp"><img src="screens/performance.png" width="2240" height="1600" alt="Velocidade de geração e memória unificada no Lulu." loading="lazy"></picture>
+    <picture><source data-themed-screen="performance" srcset="screens/performance.webp" type="image/webp"><img src="screens/performance.png" width="2240" height="1600" alt="Velocidade de geração e memória unificada no Lulu." loading="lazy"></picture>
     <figcaption>O Lulu mostra a velocidade de geração e a memória unificada enquanto o modelo roda.</figcaption>
   </figure>
 </section>
