@@ -8,7 +8,7 @@ enum GGUF {
         guard reader.bytes(4) == [0x47, 0x47, 0x55, 0x46] else { return nil }
         guard let version = reader.u32(), version >= 2 else { return nil }
         _ = reader.u64()
-        guard let pairs = reader.u64() else { return nil }
+        guard let pairs = reader.u64(), pairs <= 100_000 else { return nil }
 
         var values: [String: Meta] = [:]
         for _ in 0..<pairs {
@@ -71,57 +71,33 @@ enum GGUF {
         }
 
         func bytes(_ count: Int) -> [UInt8]? {
-            guard pull(count), count > 0 else { return nil }
-            let start = Int(position - bufferStart)
-            let slice = buffer[start..<(start + count)]
-            position += UInt64(count)
-            return Array(slice)
+            guard let data = take(count), count > 0 else { return nil }
+            return [UInt8](data)
         }
 
-        func u32() -> UInt32? {
-            guard pull(4) else { return nil }
-            let start = Int(position - bufferStart)
-            let value = buffer[start..<(start + 4)].withUnsafeBytes { $0.load(as: UInt32.self) }
-            position += 4
-            return UInt32(littleEndian: value)
-        }
-
-        func u64() -> UInt64? {
-            guard pull(8) else { return nil }
-            let start = Int(position - bufferStart)
-            let value = buffer[start..<(start + 8)].withUnsafeBytes { $0.load(as: UInt64.self) }
-            position += 8
-            return UInt64(littleEndian: value)
-        }
+        func u32() -> UInt32? { fixed(UInt32.self) }
+        func u64() -> UInt64? { fixed(UInt64.self) }
 
         func string() -> String? {
-            guard let length = u64() else { return nil }
-            if length > 1_000_000 { return nil }
-            guard pull(Int(length)) else { return nil }
-            let start = Int(position - bufferStart)
-            let slice = buffer[start..<(start + Int(length))]
-            position += length
-            return String(data: slice, encoding: .utf8)
+            guard let length = u64(), length <= 1_000_000, let data = take(Int(length)) else { return nil }
+            return String(data: data, encoding: .utf8)
         }
 
         func skip(_ type: UInt32) -> Bool {
             switch type {
             case 8:
-                guard let length = u64() else { return false }
-                position += length
+                guard let length = u64(), advance(length) else { return false }
                 return true
             case 9:
-                guard let element = u32(), let count = u64() else { return false }
+                guard let element = u32(), let count = u64(), count <= 1_000_000 else { return false }
                 if element == 8 {
                     for _ in 0..<count where !skip(8) { return false }
                     return true
                 }
-                guard let stride = stride(element) else { return false }
-                position += count * UInt64(stride)
+                guard let stride = stride(element), advance(count * UInt64(stride)) else { return false }
                 return true
             default:
-                guard let stride = stride(type) else { return false }
-                position += UInt64(stride)
+                guard let stride = stride(type), advance(UInt64(stride)) else { return false }
                 return true
             }
         }
@@ -141,11 +117,8 @@ enum GGUF {
                 guard let raw = bytes(1) else { return nil }
                 return .int(Int(raw[0]))
             case 2, 3:
-                guard pull(2) else { return nil }
-                let start = Int(position - bufferStart)
-                let value = buffer[start..<(start + 2)].withUnsafeBytes { $0.load(as: UInt16.self) }
-                position += 2
-                return .int(Int(UInt16(littleEndian: value)))
+                guard let value = fixed(UInt16.self) else { return nil }
+                return .int(Int(value))
             default:
                 return skip(type) ? .int(0) : nil
             }
@@ -161,7 +134,36 @@ enum GGUF {
             }
         }
 
+        private func fixed<T: FixedWidthInteger>(_ type: T.Type) -> T? {
+            let count = MemoryLayout<T>.size
+            guard let data = take(count) else { return nil }
+            return data.withUnsafeBytes { raw in
+                guard raw.count >= count else { return nil }
+                return T(littleEndian: raw.loadUnaligned(as: T.self))
+            }
+        }
+
+        private func take(_ count: Int) -> Data? {
+            guard count >= 0, pull(count), position >= bufferStart else { return nil }
+            let start = Int(position - bufferStart)
+            let copied: Data? = buffer.withUnsafeBytes { raw in
+                guard let base = raw.baseAddress else { return count == 0 ? Data() : nil }
+                guard start >= 0, start + count <= raw.count else { return nil }
+                return Data(bytes: base + start, count: count)
+            }
+            guard let copied else { return nil }
+            position += UInt64(count)
+            return copied
+        }
+
+        private func advance(_ count: UInt64) -> Bool {
+            guard position <= UInt64.max - count else { return false }
+            position += count
+            return true
+        }
+
         private func pull(_ count: Int) -> Bool {
+            guard count >= 0, position <= UInt64.max - UInt64(count) else { return false }
             let needed = position + UInt64(count)
             if needed <= bufferStart + UInt64(buffer.count) { return true }
             if count > 1_048_576 { return false }
