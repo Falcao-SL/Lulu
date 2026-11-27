@@ -9,3 +9,4 @@ dist/
 *.profraw
 *.profdata
 xcuserdata/
+.hallmark/

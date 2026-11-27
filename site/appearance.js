@@ -21,11 +21,12 @@
     const systemOption = picker.querySelector('[value=system]');
     const demo = document.querySelector('#demo video');
     const source = demo.querySelector('source');
+    if (!systemOption || !source) return;
 
     function update() {
       apply();
       const mode = root.dataset.appearance;
-      systemOption.textContent = systemOption.dataset[mode];
+      control.dataset.mode = mode;
       picker.value = choice;
       document.querySelectorAll('[data-tray-theme]').forEach((figure) => {
         figure.dataset.active = String(figure.dataset.trayTheme === mode);
